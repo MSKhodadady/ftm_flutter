@@ -1,18 +1,36 @@
+import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/database.dart';
 import 'package:ftm_flutter/files.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqlite3/sqlite3.dart';
+import 'package:tuple/tuple.dart';
 
 class FileTag {
-  const FileTag(this.fileName, this.tags);
+  const FileTag(this.fileName, this.tags) : empty = false;
+  FileTag.empty()
+      : fileName = "",
+        tags = [],
+        empty = true;
 
   final String fileName;
   final List<String> tags;
+  final bool empty;
 
   List<Map<String, String>> toMaps() {
     return tags.map((tag) => {'fileName': fileName, 'tag': tag}).toList();
+  }
+
+  static List<FileTag> aggregate(Iterable<FileTag> fileTags) {
+    return fileTags.fold<Iterable<FileTag>>(
+        [],
+        (fileTags, element) => fileTags
+                .any((ft) => ft.fileName == element.fileName)
+            ? fileTags.map((e) =>
+                element.fileName == e.fileName ? e.addTag(element.tags[0]) : e)
+            : [...fileTags, element]).toList();
   }
 
   FileTag addTag(String newTag) => FileTag(fileName, [...tags, newTag]);
@@ -30,29 +48,7 @@ class FileTagExistStatus {
       FileTagExistStatus(exists: exists, notExists: [...notExists, ft]);
 }
 
-Future<FileTagExistStatus> checkFilesExist(Iterable<FileItem> fileTags) async {
-  final db = await getDB();
-
-  return fileTags.fold<Future<FileTagExistStatus>>(
-      Future.value(const FileTagExistStatus(exists: [], notExists: [])),
-      (previousValueF, element) async {
-    final previousValue = await previousValueF;
-    return (
-            //: file exist in directory
-            File(join(filesPath, element.name)).existsSync() &&
-                //: file exist in db
-                (await db.query(fileTagTable,
-                        distinct: true,
-                        where: "$fileNameColumn == '${element.name}'"))
-                    .isNotEmpty)
-        ? previousValue.addExist(element)
-        : previousValue.addNotExist(element);
-  });
-}
-
-Future<void> insertAndMove(FileTag ft, path, bool copy) async {
-  final db = await getDB();
-
+Future<void> insertAndMove_(FileTag ft, String path, bool copy) async {
   //: move or copy file
   var f = File(path);
   if (copy) {
@@ -61,34 +57,110 @@ Future<void> insertAndMove(FileTag ft, path, bool copy) async {
     await f.rename(join(filesPath, ft.fileName));
   }
 
-  //: add file to db
-  Future.wait(ft.toMaps().map((e) =>
-      db.insert('fileTag', e, conflictAlgorithm: ConflictAlgorithm.replace)));
+  await Future(() {
+    final db = sqlite3.open(getDBPath());
+    db.execute(
+        "INSERT INTO $fileTagTable ($fileNameColumn, $tagsColumn) VALUES ('${ft.fileName}', json('${json.encode(ft.tags)}'));");
+  });
 }
 
-Future<List<String>> tagsList() async {
-  final db = await getDB();
+Future<List<FileTag>> filesListTagFilter_(List<String> chosenTags) async {
+  List<FileTag> computation() {
+    final db = getDB_();
 
-  return (await db.query("fileTag", columns: ["tag"], distinct: true))
-      .map((e) => e['tag'] as String)
-      .toList();
+    final whereClause = chosenTags.isNotEmpty
+        ? "WHERE ${chosenTags.map((tag) => "json_string_list_element_exist($tagsColumn ->> '\$', '$tag')").join(" AND ")}"
+        : "";
+
+    final query = "SELECT * FROM $fileTagTable $whereClause;";
+
+    final res = db.select(query);
+
+    return res
+        .map((e) => FileTag(
+            e[fileNameColumn], List<String>.from(json.decode(e[tagsColumn]))))
+        .toList();
+  }
+
+  return await Future(computation);
 }
 
-Future<List<FileTag>> filesList(/* List<String> chosenTags */) async {
-  final db = await getDB();
+Future<Set<String>> tagsList_() => Future(() => Set.from(sqlite3
+    .open(getDBPath())
+    .select("SELECT $tagsColumn FROM $fileTagTable;")
+    .map((e) => List<String>.from(jsonDecode(e[tagsColumn])))
+    .fold<List<String>>(
+        [], (previousValue, element) => previousValue + element)));
 
-  final output = (await db.query("fileTag"))
-      //: convert to FileTag
-      .map<FileTag>(
-          (e) => FileTag(e[fileNameColumn] as String, [e[tagColumn] as String]))
-      //: aggregate
-      .fold<Iterable<FileTag>>(
-          [],
-          (fileTags, element) =>
-              fileTags.any((ft) => ft.fileName == element.fileName)
-                  ? fileTags.map((e) => element.fileName == e.fileName
-                      ? e.addTag(element.tags[0])
-                      : e)
-                  : [...fileTags, element]).toList();
-  return output;
+bool checkFileExist(String fileName) {
+  final db = getDB_();
+
+  final dbExists = db
+      .select("SELECT * FROM $fileTagTable WHERE $fileNameColumn = '$fileName'")
+      .isNotEmpty;
+  final fileExists = File(join(filesPath, fileName)).existsSync();
+
+  return dbExists && fileExists;
+}
+
+Future<FileTagExistStatus> checkFilesExist_(Iterable<FileItem> files) async {
+  return (await Future(
+          () => files.map((e) => Tuple2(e, checkFileExist(e.name)))))
+      .fold<FileTagExistStatus>(
+          const FileTagExistStatus(exists: [], notExists: []),
+          (acc, i) =>
+              i.item2 ? acc.addExist(i.item1) : acc.addNotExist(i.item1));
+}
+
+Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
+  if (oldFT.fileName != newFT.fileName) {
+    if (checkFileExist(newFT.fileName)) {
+      throw FileExists();
+    } else {
+      var f = File(join(filesPath, oldFT.fileName));
+      await f.rename(join(filesPath, newFT.fileName));
+
+      final db = getDB_();
+
+      await Future(
+        () {
+          db.execute("""
+            UPDATE $fileTagTable
+            SET $fileNameColumn = '${newFT.fileName}'
+            WHERE $fileNameColumn = '${oldFT.fileName}';
+          """);
+        },
+      );
+    }
+  }
+
+  if (!listEquals(oldFT.tags, newFT.tags)) {
+    final db = getDB_();
+
+    await Future(
+      () {
+        db.execute("""
+            UPDATE $fileTagTable
+            SET $tagsColumn = '${jsonEncode(newFT.tags)}'
+            WHERE $fileNameColumn = '${newFT.fileName}';
+          """);
+      },
+    );
+  }
+}
+
+class FileExists implements Exception {}
+
+void deleteFile(FileTag fileTag) {
+  final db = getDB_();
+
+  db.execute(
+      "DELETE FROM $fileTagTable WHERE $fileNameColumn = '${fileTag.fileName}';");
+
+  final file = File(join(filesPath, fileTag.fileName));
+  try {
+    file.deleteSync();
+  } on FileSystemException {
+    // ignored
+  }
 }

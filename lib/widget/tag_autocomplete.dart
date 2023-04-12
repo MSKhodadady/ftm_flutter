@@ -34,7 +34,8 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
 
   Future<List<String>> _autoComplete() async {
     final txt = _textController.text;
-    final ts = await tagsList();
+    // final ts = await tagsList();
+    final ts = await tagsList_();
     return txt == ''
         ? ts
             .where((element) => widget.chosenTags.every((ct) => ct != element))
@@ -62,7 +63,9 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
             _textController.clear();
           },
           decoration: const InputDecoration(
-              border: OutlineInputBorder(), hintText: "Enter Tag Name"),
+              border: OutlineInputBorder(),
+              // hintText: "Enter Tag Name",
+              label: Text("Choose Tag")),
         ),
         SizedBox(
             height: 40,

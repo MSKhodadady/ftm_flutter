@@ -2,8 +2,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
+import 'package:ftm_flutter/widget/chosen_tag_list.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_file_plus/open_file_plus.dart';
+import 'package:ftm_flutter/widget/secondary_button.dart';
 
 typedef OnSelectFile = void Function(FilePickerResult filePickerResult);
 typedef OnDeleteFile = void Function(FileItem fileItem);
@@ -33,21 +35,29 @@ class _AddPageState extends State<AddPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      /* appBar: AppBar(
         title: const Text("Add"),
         actions: [
-          IconButton(
-              onPressed: () async {
-                widget.onSelectFile(
-                    await FilePicker.platform.pickFiles(allowMultiple: true) ??
-                        const FilePickerResult([]));
-              },
-              icon: Icon(
-                ZiconOutline.plus_2,
-                color: Theme.of(context).colorScheme.primaryContainer,
-              ))
+          Container(
+            margin: const EdgeInsets.all(10),
+            child: OutlinedButton(
+                style: ButtonStyle(
+                    padding: MaterialStateProperty.all(const EdgeInsets.all(1)),
+                    side: MaterialStateProperty.all(
+                        const BorderSide(color: Colors.white))),
+                onPressed: () async {
+                  widget.onSelectFile(await FilePicker.platform
+                          .pickFiles(allowMultiple: true) ??
+                      const FilePickerResult([]));
+                },
+                child: Text(
+                  "Add File",
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                )),
+          ),
         ],
-      ),
+      ), */
       body: Container(
         padding: const EdgeInsets.all(16),
         child: ListView(
@@ -58,99 +68,14 @@ class _AddPageState extends State<AddPage> {
                 widget.setChosenTag([...widget.chosenTags, e]);
               },
             ),
-            //: suggested tags
-            /* SizedBox(
-                height: 40,
-                child: FutureBuilder(
-                    future: _suggestedTagsFuture,
-                    builder: (context, snapshot) => snapshot.hasData
-                        ? ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: (snapshot.data as List<String>)
-                                .map((e) => InkWell(
-                                      child: Chip(
-                                        label: Text(e),
-                                        visualDensity: const VisualDensity(
-                                            horizontal: 1, vertical: -4),
-                                      ),
-                                      onTap: () async {
-                                        widget.setChosenTag(
-                                            [...widget.chosenTags, e]);
-                                        _textController.clear();
-                                      },
-                                    ))
-                                .toList())
-                        : const Text("loading"))),
-            //: text field
-            TextField(
-              controller: _textController,
-              focusNode: _textFocus,
-              onSubmitted: (txt) {
-                widget.setChosenTag([...widget.chosenTags, txt]);
-                _textController.clear();
-              },
-            ), */
-            /* TypeAheadField<String>(
-                textFieldConfiguration: TextFieldConfiguration(
-                    controller: _textController,
-                    focusNode: _textFocus,
-                    decoration: const InputDecoration(
-                      labelText: 'Enter tag',
-                      border: OutlineInputBorder(),
-                    ),
-                    onSubmitted: (text) {
-                      _textController.text = "";
-                      _textFocus.requestFocus();
-                      widget.setChosenTag([...widget.chosenTags, text]);
-                    }),
-                suggestionsCallback: (txt) async {
-                  var ts = await tagsList();
-                  return txt == ''
-                      ? ts
-                          .where((element) =>
-                              !widget.chosenTags.any((ct) => ct == element))
-                          .take(5)
-                          .toList()
-                      : ts
-                          // TODO contains case-intensive
-                          .where((element) => element.contains(txt))
-                          .where((element) =>
-                              !widget.chosenTags.any((ct) => ct == element))
-                          .take(5)
-                          .toList();
-                },
-                itemBuilder: (context, suggestion) {
-                  return ListTile(
-                    title: Text(suggestion),
-                  );
-                },
-                onSuggestionSelected: (suggestion) {
-                  widget.setChosenTag([...widget.chosenTags, suggestion]);
-                  _textFocus.requestFocus();
-                  _textController.text = '';
-                  // _suggestionsBoxController.close();
-                  // _suggestionsBoxController.open();
-                },
-                hideOnEmpty: true,
-                suggestionsBoxController: _suggestionsBoxController,
-                getImmediateSuggestions: true), */
             //: tag list
-            Wrap(
-              children: widget.chosenTags
-                  .map((e) => Container(
-                        margin: const EdgeInsets.only(right: 10),
-                        child: Chip(
-                          onDeleted: () {
-                            widget.setChosenTag(widget.chosenTags
-                                .where((element) => element != e)
-                                .toList());
-                          },
-                          label: Text(e),
-                          backgroundColor: Colors.grey[100],
-                        ),
-                      ))
-                  .toList(),
-            ),
+            ChosenTagList(
+                chosenTags: widget.chosenTags,
+                onDeleted: (e) {
+                  widget.setChosenTag(widget.chosenTags
+                      .where((element) => element != e)
+                      .toList());
+                }),
             //: selected files
             Column(
               children: widget.selectedFiles
@@ -172,6 +97,20 @@ class _AddPageState extends State<AddPage> {
                       )))
                   .toList(),
             ),
+            OutlinedButton(
+                style: ButtonStyle(
+                    side: MaterialStateProperty.all(BorderSide(
+                        color: Theme.of(context).colorScheme.secondary))),
+                onPressed: () async {
+                  widget.onSelectFile(await FilePicker.platform
+                          .pickFiles(allowMultiple: true) ??
+                      const FilePickerResult([]));
+                },
+                child: Text(
+                  "Add more Files ...",
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondary),
+                )),
           ],
         ),
       ),

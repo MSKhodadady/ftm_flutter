@@ -5,6 +5,7 @@ import 'package:ftm_flutter/pages/add_page.dart';
 import 'package:ftm_flutter/pages/explore_page.dart';
 import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
+import 'package:tuple/tuple.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({
@@ -15,7 +16,10 @@ class MainLayout extends StatefulWidget {
   State<MainLayout> createState() => _MainLayoutState();
 }
 
-enum RoutePages { homePage, addPage, explorePage }
+enum RoutePages {
+  explorePage,
+  addPage,
+}
 
 class _MainLayoutState extends State<MainLayout> {
   List<FileItem> selectedFiles = [];
@@ -23,6 +27,8 @@ class _MainLayoutState extends State<MainLayout> {
   bool copyFiles = true;
 
   var route = RoutePages.explorePage;
+
+  var _fabVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +45,8 @@ class _MainLayoutState extends State<MainLayout> {
                         .map((e) => FileItem(e.name, e.path ?? "NO-1PATH"));
 
                     //: check if files exist in our dir & db
-                    var status = await checkFilesExist(newSelectedFiles);
+                    // var status = await checkFilesExist(newSelectedFiles);
+                    var status = await checkFilesExist_(newSelectedFiles);
 
                     if (status.exists.isNotEmpty) {
                       if (!mounted) return; //: for using context in async
@@ -90,88 +97,81 @@ class _MainLayoutState extends State<MainLayout> {
                   },
                 )
               : Container(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          if (route != RoutePages.addPage) {
-            setState(() {
-              selectedFiles = [];
-            });
+      floatingActionButton: !_fabVisible
+          ? null
+          : FloatingActionButton(
+              onPressed: () async {
+                await Future.wait(selectedFiles
+                    .map((e) => Tuple2(FileTag(e.name, chosenTags), e.path))
+                    .map((e) => insertAndMove_(e.item1, e.item2, true)));
 
-            final result =
-                await FilePicker.platform.pickFiles(allowMultiple: true);
-
-            if (result != null) {
-              //: check if files exist
-              final status = await checkFilesExist(result.files
-                  .map((e) => FileItem(e.name, e.path ?? "NO-PATH")));
-              if (status.exists.isNotEmpty) {
-                if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(
-                        "${status.exists.length} file(s) exists: ${status.exists.map((e) => e.name).join(", ")}")));
+                setRouteExplore();
+              },
+              backgroundColor: Theme.of(context).colorScheme.secondary,
+              child: const Icon(ZiconOutline.plus),
+            ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        selectedItemColor: Theme.of(context).colorScheme.onPrimary,
+        unselectedItemColor: Theme.of(context).colorScheme.onPrimary,
+        selectedFontSize: 18,
+        selectedIconTheme: const IconThemeData(size: 32),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(ZiconOutline.search),
+            label: "Explore",
+          ),
+          BottomNavigationBarItem(
+              icon: Icon(ZiconOutline.plus_2), label: "Import")
+        ],
+        currentIndex: route == RoutePages.explorePage
+            ? 0
+            : route == RoutePages.addPage
+                ? 1
+                : 0,
+        onTap: (index) async {
+          switch (index) {
+            case 0:
+              if (route != RoutePages.explorePage) {
+                setRouteExplore();
               }
+              break;
+            case 1:
+              if (route != RoutePages.addPage) {
+                setState(() {
+                  selectedFiles = [];
+                });
 
-              setState(() {
-                selectedFiles = status.notExists.toList();
-              });
-            }
+                final result =
+                    await FilePicker.platform.pickFiles(allowMultiple: false);
 
-            setState(() {
-              route = RoutePages.addPage;
-            });
-          } else {
-            await Future.wait(selectedFiles
-                .map((e) => [FileTag(e.name, chosenTags), e.path])
-                .map((e) => insertAndMove(e[0] as FileTag, e[1], true)));
+                if (result != null) {
+                  //: check if files exist
+                  /* final status = await checkFilesExist(result.files
+                            .map((e) => FileItem(e.name, e.path ?? "NO-PATH"))); */
+                  final status = await checkFilesExist_(result.files
+                      .map((e) => FileItem(e.name, e.path ?? "NO-PATH")));
+                  if (status.exists.isNotEmpty) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text(
+                            "${status.exists.length} file(s) exists: ${status.exists.map((e) => e.name).join(", ")}")));
+                  }
 
-            setRouteExplore();
+                  setState(() {
+                    selectedFiles = status.notExists.toList();
+                  });
+                }
+
+                setState(() {
+                  route = RoutePages.addPage;
+                  _fabVisible = true;
+                });
+              }
+              break;
           }
         },
-        mini: true,
-        backgroundColor: route == RoutePages.addPage
-            ? Theme.of(context).colorScheme.primaryContainer
-            : Theme.of(context).colorScheme.secondary,
-        child: Icon(
-          ZiconOutline.plus,
-          color: route == RoutePages.addPage
-              ? Theme.of(context).colorScheme.onPrimary
-              : Theme.of(context).colorScheme.onSecondary,
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        color: Theme.of(context).colorScheme.primary,
-        shape: const CircularNotchedRectangle(),
-        child: IconTheme(
-            data: IconThemeData(color: Theme.of(context).colorScheme.onPrimary),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  // TODO
-                  /* IconButton(
-                      onPressed: () {},
-                      icon: const Icon(ZiconOutline.settings_2)), */
-                  IconButton(
-                      onPressed: () {
-                        setRouteExplore();
-                      },
-                      icon: const Icon(ZiconOutline.search)),
-                  // TODO
-                  /* IconButton(
-                      onPressed: () {}, icon: const Icon(ZiconOutline.sound)), */
-
-                  // TODO
-                  IconButton(
-                      // onPressed: t.printDirectories,
-                      onPressed: () async {
-                        print(await tagsList());
-                      },
-                      icon: const Icon(ZiconOutline.image_placeholder)),
-                ],
-              ),
-            )),
       ),
     );
   }
@@ -181,6 +181,7 @@ class _MainLayoutState extends State<MainLayout> {
       route = RoutePages.explorePage;
       chosenTags = [];
       selectedFiles = [];
+      _fabVisible = false;
     });
   }
 }

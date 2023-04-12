@@ -1,9 +1,9 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/files.dart';
+import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path/path.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -22,27 +22,65 @@ class _ExplorePageState extends State<ExplorePage> {
   void initState() {
     super.initState();
 
-    fileTagsFuture = filesList();
+    // fileTagsFuture = filesList();
+    fileTagsFuture = filesListTagFilter_(chosenTags);
+  }
+
+  void _refresh() {
+    setState(() {
+      fileTagsFuture = filesListTagFilter_(chosenTags);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      /* appBar: AppBar(
         title: const Text('Explore'),
-      ),
+        actions: [
+          IconButton(onPressed: _refresh, icon: const Icon(Icons.refresh))
+        ],
+      ), */
       body: Container(
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
             //: tag chooser
-            TagAutocomplete(
-                onSubmitted: (tag) {
-                  setState(() {
-                    chosenTags = [...chosenTags, tag];
-                  });
-                },
-                chosenTags: chosenTags),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Flexible(
+                  flex: 10,
+                  fit: FlexFit.loose,
+                  child: TagAutocomplete(
+                      onSubmitted: (tag) {
+                        setState(() {
+                          chosenTags = [...chosenTags, tag];
+                        });
+
+                        _refresh();
+                      },
+                      chosenTags: chosenTags),
+                ),
+                Flexible(
+                    flex: 2,
+                    fit: FlexFit.tight,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 5, horizontal: 10),
+                      child: TextButton(
+                        onPressed: _refresh,
+                        style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(
+                                Theme.of(context).colorScheme.secondary)),
+                        child: Icon(
+                          Icons.refresh,
+                          color: Theme.of(context).colorScheme.onSecondary,
+                        ),
+                      ),
+                    ))
+              ],
+            ),
             //: chosen tags
             AnimatedSize(
               duration: const Duration(milliseconds: 500),
@@ -61,6 +99,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                       .where((element) => element != e)
                                       .toList();
                                 });
+                                _refresh();
                               },
                               visualDensity: VisualDensity.compact,
                             ),
@@ -85,11 +124,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                     OpenFile.open(join(filesPath, e.fileName));
                                   },
                                 ),
-                                subtitle: /* SizedBox(
-                                  height: 40,
-                                  child: ListView */
-                                    Wrap(
-                                  // scrollDirection: Axis.horizontal,
+                                subtitle: Wrap(
                                   children: e.tags
                                       .map((t) => Chip(
                                             label: Text(t),
@@ -100,9 +135,19 @@ class _ExplorePageState extends State<ExplorePage> {
                                 ),
                                 trailing: IconButton(
                                   icon: const Icon(Icons.more_vert),
-                                  onPressed: () {},
+                                  onPressed: () async {
+                                    // TODO
+                                    var k = await showDialog<ActionResult>(
+                                        context: context,
+                                        builder: (context) {
+                                          return EditFileTag(oldFileTag: e);
+                                        });
+
+                                    if (k is Changed || k is Deleted) {
+                                      _refresh();
+                                    }
+                                  },
                                 ),
-                                // ),
                               ))
                           .toList(),
                     )

@@ -1,4 +1,4 @@
-package com.example.ftm_flutter
+package com.ftm.android
 
 import io.flutter.embedding.android.FlutterActivity
 

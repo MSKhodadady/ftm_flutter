@@ -1,6 +1,6 @@
 // ignore_for_file: avoid_print
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
+// import 'package:sqflite/sqflite.dart';
 
 void printDirectories() async {
   print("getApplicationDocumentsDirectory");
@@ -35,7 +35,7 @@ void printDirectories() async {
   // '/data/user/0/om.msk.ftm_flutter/cache'
 
   print("getDatabasesPath");
-  print(await getDatabasesPath());
+  // print(await getDatabasesPath());
   // '/data/user/0/com.msk.ftm_flutter/databases'
 
   // print("home dir");
