@@ -6,10 +6,10 @@ const filesPath = '/storage/emulated/0/FTM';
 final configFilesPath = p.join(filesPath, '.configs');
 
 Future<void> initFilesDir() async {
-  final filesDir = Directory(configFilesPath);
+  final configFilesDir = Directory(configFilesPath);
 
   try {
-    await filesDir.create(recursive: true);
+    await configFilesDir.create(recursive: true);
   } catch (err) {
     //: TODO
     throw Exception(err);

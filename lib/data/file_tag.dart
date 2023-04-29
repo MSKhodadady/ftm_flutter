@@ -51,12 +51,15 @@ class FileTagExistStatus {
 Future<void> insertAndMove_(FileTag ft, String path, bool copy) async {
   //: move or copy file
   var f = File(path);
-  if (copy) {
-    await f.copy(join(filesPath, ft.fileName));
-  } else {
-    await f.rename(join(filesPath, ft.fileName));
+  await f.copy(join(filesPath, ft.fileName));
+  if (!copy) {
+    await f.delete();
   }
 
+  insertDB_(ft);
+}
+
+Future<void> insertDB_(FileTag ft) async {
   await Future(() {
     final db = sqlite3.open(getDBPath());
     db.execute(
@@ -93,17 +96,21 @@ Future<Set<String>> tagsList_() => Future(() => Set.from(sqlite3
         [], (previousValue, element) => previousValue + element)));
 
 bool checkFileExist(String fileName) {
+  final fileExists = File(join(filesPath, fileName)).existsSync();
+
+  return fileDbExists_(fileName) && fileExists;
+}
+
+bool fileDbExists_(String fileName) {
   final db = getDB_();
 
   final dbExists = db
       .select("SELECT * FROM $fileTagTable WHERE $fileNameColumn = '$fileName'")
       .isNotEmpty;
-  final fileExists = File(join(filesPath, fileName)).existsSync();
-
-  return dbExists && fileExists;
+  return dbExists;
 }
 
-Future<FileTagExistStatus> checkFilesExist_(Iterable<FileItem> files) async {
+Future<FileTagExistStatus> checkAllFilesExist(Iterable<FileItem> files) async {
   return (await Future(
           () => files.map((e) => Tuple2(e, checkFileExist(e.name)))))
       .fold<FileTagExistStatus>(
@@ -163,4 +170,40 @@ void deleteFile(FileTag fileTag) {
   } on FileSystemException {
     // ignored
   }
+}
+
+class IntegrityRes {
+  final List<String> filesToBeAddedToDb, dbItemsToBeRemoved;
+
+  IntegrityRes(this.filesToBeAddedToDb, this.dbItemsToBeRemoved);
+}
+
+Future<IntegrityRes> checkIntegrity() async {
+  //: check all files in db
+  final filesDir = Directory(filesPath);
+  final fileNames = (await filesDir.list().toList())
+      .whereType<File>()
+      .map((e) => basename(e.path));
+
+  final filesToBeAddedToDb =
+      fileNames.where((element) => !fileDbExists_(element)).toList();
+
+  for (var fileName in filesToBeAddedToDb) {
+    final ft = FileTag(fileName, []);
+    await insertDB_(ft);
+  }
+
+  //: check all db items exist
+  final dbFiles = getDB_()
+      .select("SELECT $fileNameColumn FROM $fileTagTable;")
+      .map<String>((e) => e[fileNameColumn]);
+
+  final dbItemsToBeRemoved =
+      dbFiles.where((dbFile) => !fileNames.any((e) => e == dbFile));
+
+  for (var e in dbItemsToBeRemoved) {
+    getDB_().execute("DELETE FROM $fileTagTable WHERE $fileNameColumn = '$e';");
+  }
+
+  return IntegrityRes(filesToBeAddedToDb, dbItemsToBeRemoved.toList());
 }

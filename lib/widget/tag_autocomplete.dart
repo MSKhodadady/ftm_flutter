@@ -61,6 +61,7 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
           onSubmitted: (txt) {
             widget.onSubmitted(txt);
             _textController.clear();
+            _textFocus.requestFocus();
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
