@@ -2,12 +2,12 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/reducer/route.dart';
+import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/pages/add_page.dart';
 import 'package:ftm_flutter/pages/explore_page.dart';
 import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
-import 'package:ftm_flutter/reducer/selected_files.dart';
+import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:get/get.dart';
 
 class MainLayout extends HookWidget {
