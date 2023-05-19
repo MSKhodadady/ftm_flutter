@@ -4,8 +4,6 @@ import 'package:get/get.dart';
 class SelectedFilesController extends GetxController {
   List<FileItem> selectedFiles = [];
 
-  static SelectedFilesController get to => Get.find();
-
   void add(List<FileItem> fileItems) {
     selectedFiles = [...selectedFiles, ...fileItems];
 

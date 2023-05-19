@@ -20,6 +20,8 @@ class _EditFileTagState extends State<EditFileTag> {
   var addTag = false;
   String? anotherFileExists;
 
+  bool deleteFileConfirm = false;
+
   @override
   void initState() {
     super.initState();
@@ -30,93 +32,122 @@ class _EditFileTagState extends State<EditFileTag> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      actions: [
-        TextButton(
-          onPressed: () async {
-            deleteFile(widget.oldFileTag);
+    return deleteFileConfirm
+        ? AlertDialog(
+            content: const Text("Are You sure to delete file?"),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              TextButton(
+                  onPressed: (() {
+                    deleteFile(widget.oldFileTag);
 
-            Navigator.pop(context, Deleted());
-          },
-          child: const Text(
-            "Delete file",
-          ),
-        ),
-        ElevatedButton(
-            onPressed: () async {
-              if (_textController.text == widget.oldFileTag.fileName &&
-                  listEquals(widget.oldFileTag.tags, chosenTags)) {
-                Navigator.of(context).pop(NotChanged());
-                return;
-              }
-              try {
-                if (!mounted) return;
-                final newFileTag = FileTag(_textController.text, chosenTags);
-                await changeFile(widget.oldFileTag, newFileTag);
+                    Navigator.pop(context, Deleted());
+                  }),
+                  child: Text(
+                    "Yes",
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary),
+                  )),
+              ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context, NotChanged());
+                  },
+                  child: const Text("No"))
+            ],
+          )
+        : AlertDialog(
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  setState(() {
+                    deleteFileConfirm = true;
+                  });
+                },
+                child: Text(
+                  "Delete file",
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.secondary),
+                ),
+              ),
+              ElevatedButton(
+                  onPressed: () async {
+                    if (_textController.text == widget.oldFileTag.fileName &&
+                        listEquals(widget.oldFileTag.tags, chosenTags)) {
+                      Navigator.of(context).pop(NotChanged());
+                      return;
+                    }
+                    try {
+                      if (!mounted) return;
+                      final newFileTag =
+                          FileTag(_textController.text, chosenTags);
+                      await changeFile(widget.oldFileTag, newFileTag);
 
-                // ignore: use_build_context_synchronously
-                Navigator.of(context).pop(Changed(newFileTag));
-              } on FileExists {
-                setState(() {
-                  anotherFileExists = "another file exists with this name";
-                });
-
-                Future.delayed(
-                    const Duration(seconds: 2),
-                    () => setState(() {
-                          anotherFileExists = null;
-                        }));
-              }
-            },
-            child: const Text(
-              "Confirm",
-            )),
-      ],
-      content: SizedBox(
-        width: 300,
-        height: 250,
-        child: ListView(
-          children: [
-            const SizedBox(
-              height: 10,
-            ),
-            TextField(
-              controller: _textController,
-              decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  hintText: "file name",
-                  label: const Text("file name"),
-                  errorText: anotherFileExists),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            addTag
-                ? TagAutocomplete(
-                    onSubmitted: (p0) => setState(() {
-                          chosenTags = [...chosenTags, p0];
-                        }),
-                    chosenTags: chosenTags)
-                : ElevatedButton(
-                    onPressed: () {
+                      // ignore: use_build_context_synchronously
+                      Navigator.of(context).pop(Changed(newFileTag));
+                    } on FileExists {
                       setState(() {
-                        addTag = true;
+                        anotherFileExists =
+                            "another file exists with this name";
                       });
-                    },
-                    child: const Text("Add Tag")),
-            const SizedBox(
-              height: 10,
+
+                      Future.delayed(
+                          const Duration(seconds: 2),
+                          () => setState(() {
+                                anotherFileExists = null;
+                              }));
+                    }
+                  },
+                  child: const Text(
+                    "Confirm",
+                  )),
+            ],
+            content: SizedBox(
+              width: 300,
+              height: 300,
+              child: ListView(
+                children: [
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  TextField(
+                    controller: _textController,
+                    decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        hintText: "file name",
+                        label: const Text("file name"),
+                        errorText: anotherFileExists),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  addTag
+                      ? TagAutocomplete(
+                          onSubmitted: (p0) => setState(() {
+                                chosenTags = [...chosenTags, p0];
+                              }),
+                          chosenTags: chosenTags)
+                      : ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              addTag = true;
+                            });
+                          },
+                          child: const Text("Add Tag")),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  ChosenTagList(
+                      chosenTags: chosenTags,
+                      onDeleted: (e) => setState(() {
+                            chosenTags = chosenTags
+                                .where((element) => element != e)
+                                .toList();
+                          })),
+                ],
+              ),
             ),
-            ChosenTagList(
-                chosenTags: chosenTags,
-                onDeleted: (e) => setState(() {
-                      chosenTags =
-                          chosenTags.where((element) => element != e).toList();
-                    }))
-          ],
-        ),
-      ),
-    );
+          );
   }
 }
 

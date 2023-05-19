@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
-const filesPath = '/storage/emulated/0/FTM';
+const mainFolderName = "FTM";
+
+const filesPath = '/storage/emulated/0/$mainFolderName';
 //: for db and configs
 final configFilesPath = p.join(filesPath, '.configs');
 

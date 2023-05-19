@@ -1,5 +1,5 @@
 name: ftm_flutter
-description: A new Flutter project.
+description: A New Age Of File Management
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -35,9 +35,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
 
-  flutter_typeahead: ^4.0.0
   path: ^1.8.1
-  file_picker: ^5.2.4
   path_provider:
   permission_handler: ^10.0.0
   sqlite3:
@@ -45,7 +43,6 @@ dependencies:
   tuple:
   flutter_launcher_icons: ^0.11.0
   device_info_plus: ^8.0.0
-  share_plus: ^6.3.0
   open_file_plus: ^3.3.0
   flutter_hooks: ^0.18.6
   get:
@@ -109,5 +106,5 @@ flutter:
 
 flutter_icons:
   android: true
-  image_path: "assets/icon/FTM Logo New.png"
+  image_path: "assets/icon/FTM Logo New 2.png"
   min_sdk_android: 21

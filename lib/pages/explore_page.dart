@@ -102,11 +102,9 @@ class ExplorePage extends HookWidget {
                     children: (fileTagsFuture.data as Iterable<FileTag>)
                         .map((e) => ListTile(
                               title: Text(e.fileName),
-                              leading: InkWell(
-                                child: Image.asset(
-                                    'assets/images/placeholder-image.png',
-                                    width: 70),
-                                onTap: () {
+                              leading: IconButton(
+                                icon: const Icon(Icons.feed_outlined, size: 30),
+                                onPressed: () {
                                   OpenFile.open(join(filesPath, e.fileName));
                                 },
                               ),

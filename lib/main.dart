@@ -47,6 +47,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData.from(
           colorScheme: ColorScheme.light(
               primary: Colors.pink,
+              onPrimary: Colors.white,
               secondary: Colors.amber,
               onSecondary: Colors.black,
               primaryContainer: Colors.pink.shade900)),

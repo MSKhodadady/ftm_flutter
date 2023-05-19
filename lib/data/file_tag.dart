@@ -48,13 +48,16 @@ class FileTagExistStatus {
       FileTagExistStatus(exists: exists, notExists: [...notExists, ft]);
 }
 
-Future<void> insertAndMove_(FileTag ft, String path, bool copy) async {
+Future<void> insertAndMove_(
+  FileTag ft,
+  String path,
+  /* {bool copy = false} */
+) async {
   //: move or copy file
   var f = File(path);
+  // TODO copy or move by config, move by default
   await f.copy(join(filesPath, ft.fileName));
-  if (!copy) {
-    await f.delete();
-  }
+  await f.delete();
 
   insertDB_(ft);
 }
