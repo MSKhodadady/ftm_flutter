@@ -105,7 +105,7 @@ class ExplorePage extends HookWidget {
                               leading: IconButton(
                                 icon: const Icon(Icons.feed_outlined, size: 30),
                                 onPressed: () {
-                                  OpenFile.open(join(filesPath, e.fileName));
+                                  OpenFile.open(join(filesPath(), e.fileName));
                                 },
                               ),
                               subtitle: Wrap(

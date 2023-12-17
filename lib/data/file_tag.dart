@@ -56,7 +56,7 @@ Future<void> insertAndMove_(
   //: move or copy file
   var f = File(path);
   // TODO copy or move by config, move by default
-  await f.copy(join(filesPath, ft.fileName));
+  await f.copy(join(filesPath(), ft.fileName));
   await f.delete();
 
   insertDB_(ft);
@@ -99,7 +99,7 @@ Future<Set<String>> tagsList_() => Future(() => Set.from(sqlite3
         [], (previousValue, element) => previousValue + element)));
 
 bool checkFileExist(String fileName) {
-  final fileExists = File(join(filesPath, fileName)).existsSync();
+  final fileExists = File(join(filesPath(), fileName)).existsSync();
 
   return fileDbExists_(fileName) && fileExists;
 }
@@ -127,8 +127,8 @@ Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
     if (checkFileExist(newFT.fileName)) {
       throw FileExists();
     } else {
-      var f = File(join(filesPath, oldFT.fileName));
-      await f.rename(join(filesPath, newFT.fileName));
+      var f = File(join(filesPath(), oldFT.fileName));
+      await f.rename(join(filesPath(), newFT.fileName));
 
       final db = getDB_();
 
@@ -167,7 +167,7 @@ void deleteFile(FileTag fileTag) {
   db.execute(
       "DELETE FROM $fileTagTable WHERE $fileNameColumn = '${fileTag.fileName}';");
 
-  final file = File(join(filesPath, fileTag.fileName));
+  final file = File(join(filesPath(), fileTag.fileName));
   try {
     file.deleteSync();
   } on FileSystemException {
@@ -183,7 +183,7 @@ class IntegrityRes {
 
 Future<IntegrityRes> checkIntegrity() async {
   //: check all files in db
-  final filesDir = Directory(filesPath);
+  final filesDir = Directory(filesPath());
   final fileNames = (await filesDir.list().toList())
       .whereType<File>()
       .map((e) => basename(e.path));

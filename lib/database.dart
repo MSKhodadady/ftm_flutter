@@ -9,8 +9,6 @@ String _dbPath = "";
 Database? _db;
 
 Future<void> initDB() async {
-  // TODO it's just for android.
-  // _dbPath = p.join((await getApplicationSupportDirectory()).path, 'ftm.db');
   _dbPath = p.join(configFilesPath, 'ftm.db');
 
   _db ??= sqlite3.open(_dbPath);

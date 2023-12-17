@@ -29,6 +29,8 @@ void main() async {
         exit(0);
       }
     }
+  } else if (Platform.isLinux) {
+    await initFilesDir();
   }
 
   await initDB();

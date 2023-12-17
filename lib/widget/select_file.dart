@@ -14,10 +14,8 @@ class SelectFile extends StatefulWidget {
   State<SelectFile> createState() => _SelectFileState();
 }
 
-const homePath = "/sdcard";
-
 class _SelectFileState extends State<SelectFile> {
-  String currentPath = "/sdcard";
+  String currentPath = homePath();
   bool multipleSelect = false;
 
   List<String> selectedFiles = [];
@@ -30,7 +28,7 @@ class _SelectFileState extends State<SelectFile> {
         .listSync()
         .where((element) => !basename(element.path).startsWith('.'));
 
-    if (currentPath == homePath) {
+    if (currentPath == homePath()) {
       fl = fl.where((element) => basename(element.path) != mainFolderName);
     }
 
@@ -160,7 +158,7 @@ class _SelectFileState extends State<SelectFile> {
         ),
       ];
     }
-    if (!(multipleSelect || currentPath == homePath)) {
+    if (!(multipleSelect || currentPath == homePath())) {
       res = [
         ...res,
         TextButton(
