@@ -146,6 +146,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
+  flutter_media_metadata:
+    dependency: "direct main"
+    description:
+      name: flutter_media_metadata
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.0+1"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -212,6 +219,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.8.0"
+  mime:
+    dependency: "direct main"
+    description:
+      name: mime
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.4"
   open_file_plus:
     dependency: "direct main"
     description:

@@ -70,7 +70,7 @@ Future<void> insertDB_(FileTag ft) async {
   });
 }
 
-Future<List<FileTag>> filesListTagFilter_(List<String> chosenTags) async {
+Future<List<FileTag>> getFilesList(List<String> chosenTags) async {
   List<FileTag> computation() {
     final db = getDB_();
 

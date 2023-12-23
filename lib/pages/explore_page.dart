@@ -16,7 +16,8 @@ class ExplorePage extends HookWidget {
   Widget build(BuildContext context) {
     final chosenTags = useState<List<String>>([]);
     final refreshKey = useState(UniqueKey());
-    final fileTagMemo = useMemoized(() => filesListTagFilter_(chosenTags.value),
+    //: returns a cached value of returned value of a function
+    final fileTagMemo = useMemoized(() => getFilesList(chosenTags.value),
         [refreshKey.value, chosenTags.value]);
     final fileTagsFuture = useFuture(fileTagMemo);
 
