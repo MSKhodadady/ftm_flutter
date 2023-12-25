@@ -6,6 +6,7 @@ import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
+import 'package:ftm_flutter/widget/file_leading.dart';
 import 'package:ftm_flutter/widget/select_file.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:get/get.dart';
@@ -106,23 +107,42 @@ class AddPage extends HookWidget {
               //: selected files
               Column(
                 children: selectedFilesController.selectedFiles
-                    .map((e) => ListTile(
-                        title: Text(e.name),
-                        trailing: IconButton(
-                          icon: const Icon(ZiconOutline.trash),
-                          onPressed: () {
-                            onDeleteFile(e, selectedFilesController);
-                          },
-                        ),
-                        leading: IconButton(
-                          icon: const Icon(
-                            Icons.feed_outlined,
-                            size: 30,
-                          ),
-                          onPressed: () {
-                            OpenFile.open(e.path);
-                          },
-                        )))
+                    .map((e) => SizedBox(
+                          height: 50,
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Container(
+                                    margin: const EdgeInsets.all(10),
+                                    child: FileLeading(
+                                      filePath: e.path,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 10,
+                                  child: Text(e.name),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: IconButton(
+                                    icon: const Icon(ZiconOutline.pen),
+                                    onPressed: () {},
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: IconButton(
+                                    icon: const Icon(ZiconOutline.trash),
+                                    onPressed: () {
+                                      onDeleteFile(e, selectedFilesController);
+                                    },
+                                  ),
+                                )
+                              ]),
+                        ))
                     .toList(),
               ),
               OutlinedButton(

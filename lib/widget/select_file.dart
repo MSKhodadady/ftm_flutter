@@ -1,10 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/files.dart';
-import 'package:mime/mime.dart';
-import 'package:open_file_plus/open_file_plus.dart';
+import 'package:ftm_flutter/widget/file_leading.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
@@ -38,18 +36,17 @@ class _SelectFileState extends State<SelectFile> {
     var filesList = fl.toList();
     filesList.sort(((a, b) => a.path.compareTo(b.path)));
 
-    // /* filesList = */ var separated = filesList
-    //     .fold<Tuple2<List<Directory>, List<File>>>(const Tuple2([], []),
-    //         (previousValue, element) {
-    //   if (element is File) {
-    //     return Tuple2(previousValue.item1, [...previousValue.item2, element]);
-    //   } else if (element is Directory) {
-    //     return Tuple2([...previousValue.item1, element], previousValue.item2);
-    //   }
-    //   return previousValue;
-    // });
+    var separated = filesList.fold<Tuple2<List<Directory>, List<File>>>(
+        const Tuple2([], []), (previousValue, element) {
+      if (element is File) {
+        return Tuple2(previousValue.item1, [...previousValue.item2, element]);
+      } else if (element is Directory) {
+        return Tuple2([...previousValue.item1, element], previousValue.item2);
+      }
+      return previousValue;
+    });
 
-    // filesList = [...separated.item1.toList(), ...separated.item2.toList()];
+    filesList = [...separated.item1.toList(), ...separated.item2.toList()];
 
     return Scaffold(
       appBar: AppBar(
@@ -197,42 +194,3 @@ class _SelectFileState extends State<SelectFile> {
 
 bool isFile(String path) => FileSystemEntity.isFileSync(path);
 bool isDir(String path) => FileSystemEntity.isDirectorySync(path);
-
-class FileLeading extends StatelessWidget {
-  const FileLeading({super.key, required this.filePath});
-
-  final String filePath;
-
-  @override
-  Widget build(BuildContext context) {
-    if (FileSystemEntity.isFileSync(filePath)) {
-      var mimeType = lookupMimeType(filePath);
-
-      if (mimeType == null) {
-        return IconButton(
-            onPressed: () {
-              OpenFile.open(filePath);
-            },
-            icon: const Icon(Icons.feed_outlined));
-      } else if (mimeType.startsWith('image/')) {
-        return InkWell(
-            onTap: () {
-              OpenFile.open(filePath);
-            },
-            child: Image.file(
-              File(filePath),
-              width: 100,
-              height: 100,
-            ));
-      } else {
-        return IconButton(
-            onPressed: () {
-              OpenFile.open(filePath);
-            },
-            icon: const Icon(Icons.feed_outlined));
-      }
-    } else {
-      return const Icon(Icons.folder);
-    }
-  }
-}
