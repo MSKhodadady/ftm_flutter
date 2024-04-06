@@ -3,8 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/files.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
+import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
-import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path/path.dart';
 
 bool integrityChecked = false;
@@ -57,87 +57,76 @@ class ExplorePage extends HookWidget {
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           fullRefresh();
         },
         mini: true,
         child: const Icon(Icons.refresh),
       ),
-      body: Container(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            //: tag chooser
-            TagAutocomplete(
+      body: ListView(
+        children: [
+          //: tag chooser
+          Container(
+            padding: const EdgeInsets.all(10),
+            child: TagAutocomplete(
                 onSubmitted: (tag) {
                   chosenTags.value = [...chosenTags.value, tag];
                 },
                 chosenTags: chosenTags.value),
-            //: chosen tags
-            AnimatedSize(
-              duration: const Duration(milliseconds: 500),
-              child: SizedBox(
-                height: chosenTags.value.isEmpty ? 0 : 40,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: chosenTags.value
-                      .map((e) => Container(
-                            padding: const EdgeInsets.only(left: 5),
-                            child: Chip(
-                              label: Text(e),
-                              onDeleted: () {
-                                chosenTags.value = chosenTags.value
-                                    .where((element) => element != e)
-                                    .toList();
-                              },
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ))
-                      .toList(),
-                ),
+          ),
+          //: chosen tags
+          AnimatedSize(
+            duration: const Duration(milliseconds: 500),
+            child: SizedBox(
+              height: chosenTags.value.isEmpty ? 0 : 40,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: chosenTags.value
+                    .map((e) => Container(
+                          padding: const EdgeInsets.only(left: 5),
+                          child: Chip(
+                            label: Text(e),
+                            color: MaterialStatePropertyAll(
+                                Theme.of(context).colorScheme.secondary),
+                            side: const BorderSide(color: Colors.transparent),
+                            onDeleted: () {
+                              chosenTags.value = chosenTags.value
+                                  .where((element) => element != e)
+                                  .toList();
+                            },
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        ))
+                    .toList(),
               ),
             ),
-            //: fileTags
-            fileTagsFuture.hasData
-                ? Column(
+          ),
+          //: fileTags
+          fileTagsFuture.hasData
+              ? Container(
+                  margin: const EdgeInsets.only(bottom: 100),
+                  child: Column(
                     children: (fileTagsFuture.data as Iterable<FileTag>)
-                        .map((e) => ListTile(
-                              title: Text(e.fileName),
-                              leading: IconButton(
-                                icon: const Icon(Icons.feed_outlined, size: 30),
-                                onPressed: () {
-                                  OpenFile.open(join(filesPath(), e.fileName));
-                                },
+                        .map((e) => FileTagRow(
+                              ft: e,
+                              filePath: join(
+                                filesPath(),
+                                e.fileName,
                               ),
-                              subtitle: Wrap(
-                                children: e.tags
-                                    .map((t) => Chip(
-                                          label: Text(t),
-                                          visualDensity: const VisualDensity(
-                                              horizontal: 1, vertical: -4),
-                                        ))
-                                    .toList(),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.more_vert),
-                                onPressed: () async {
-                                  // TODO
-                                  var k = await showDialog<ActionResult>(
-                                      context: context,
-                                      builder: (context) {
-                                        return EditFileTag(oldFileTag: e);
-                                      });
-                                  if (k is Changed || k is Deleted) {
-                                    refresh();
-                                  }
-                                },
-                              ),
+                              onTagClick: (tag) {
+                                chosenTags.value = [...chosenTags.value, tag];
+                              },
+                              onFileAction: (k) {
+                                if (k is Changed || k is Deleted) {
+                                  refresh();
+                                }
+                              },
                             ))
                         .toList(),
-                  )
-                : const Text("No Data"),
-          ],
-        ),
+                  ),
+                )
+              : const Text("No Data"),
+        ],
       ),
     );
   }

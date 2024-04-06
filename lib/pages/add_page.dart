@@ -3,14 +3,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/controllers/route.dart';
-import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
-import 'package:ftm_flutter/widget/file_leading.dart';
+import 'package:ftm_flutter/widget/edit_file_tag.dart';
+import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/select_file.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:get/get.dart';
-import 'package:open_file_plus/open_file_plus.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
@@ -18,10 +17,9 @@ class AddPage extends HookWidget {
   const AddPage({super.key});
 
   void onSelectFile(
-    List<String> files,
-    SelectedFilesController selectedFilesController,
-    BuildContext context,
-  ) async {
+      List<String> files,
+      SelectedFilesController selectedFilesController,
+      BuildContext context) async {
     //: convert selected files to FileItem
     var newSelectedFiles = files.map((e) => FileItem(basename(e), e));
     //: check if files exist in our dir & db
@@ -87,14 +85,18 @@ class AddPage extends HookWidget {
               child: const Icon(Icons.add)),
         ),
         body: Container(
-          padding: const EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 100),
           child: ListView(
             children: [
-              TagAutocomplete(
-                chosenTags: chosenTags.value,
-                onSubmitted: (e) {
-                  chosenTags.value = [...chosenTags.value, e];
-                },
+              Container(
+                padding: const EdgeInsets.all(10),
+                child: TagAutocomplete(
+                  title: "Choose tags for all selected files",
+                  chosenTags: chosenTags.value,
+                  onSubmitted: (e) {
+                    chosenTags.value = [...chosenTags.value, e];
+                  },
+                ),
               ),
               //: tag list
               ChosenTagList(
@@ -107,67 +109,43 @@ class AddPage extends HookWidget {
               //: selected files
               Column(
                 children: selectedFilesController.selectedFiles
-                    .map((e) => SizedBox(
-                          height: 50,
-                          child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  flex: 2,
-                                  child: Container(
-                                    margin: const EdgeInsets.all(10),
-                                    child: FileLeading(
-                                      filePath: e.path,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 10,
-                                  child: Text(e.name),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: IconButton(
-                                    icon: const Icon(ZiconOutline.pen),
-                                    onPressed: () {},
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 1,
-                                  child: IconButton(
-                                    icon: const Icon(ZiconOutline.trash),
-                                    onPressed: () {
-                                      onDeleteFile(e, selectedFilesController);
-                                    },
-                                  ),
-                                )
-                              ]),
-                        ))
+                    .map((e) => FileTagRow(
+                        ft: FileTag(e.name, []),
+                        filePath: e.path,
+                        isImport: true,
+                        onTagClick: (s) {},
+                        onFileAction: (s) {
+                          if (s is Changed) {
+                          } else if (s is Deleted) {}
+                        }))
                     .toList(),
               ),
-              OutlinedButton(
-                  style: ButtonStyle(
-                      side: MaterialStateProperty.all(BorderSide(
-                          color: Theme.of(context).colorScheme.secondary))),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => Dialog(
-                        child: SelectFile(
-                          doneSelection: (selectedFiles) {
-                            onSelectFile(selectedFiles, selectedFilesController,
-                                context);
-                            Navigator.pop(context);
-                          },
+              Container(
+                margin: const EdgeInsets.all(10),
+                child: OutlinedButton(
+                    style: ButtonStyle(
+                        side: MaterialStateProperty.all(BorderSide(
+                            color: Theme.of(context).colorScheme.secondary))),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => Dialog(
+                          child: SelectFile(
+                            doneSelection: (selectedFiles) {
+                              onSelectFile(selectedFiles,
+                                  selectedFilesController, context);
+                              Navigator.pop(context);
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    "Add more Files ...",
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSecondary),
-                  )),
+                      );
+                    },
+                    child: Text(
+                      "Add more Files ...",
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSecondary),
+                    )),
+              ),
             ],
           ),
         ),
@@ -175,3 +153,34 @@ class AddPage extends HookWidget {
     );
   }
 }
+
+
+ /* Card(
+                          child: ListTile(
+                            leading: SizedBox(
+                                width: 50,
+                                child: FileLeading(filePath: e.path)),
+                            title: Text(e.name),
+                            trailing: Wrap(
+                              spacing: 2,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(ZiconOutline.pen),
+                                  onPressed: () {
+                                    // var k = showDialog(
+                                    //     context: context,
+                                    //     builder: ((context) {
+                                    //       // return EditFileTag(oldFileTag: e);
+                                    //     }));
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(ZiconOutline.trash),
+                                  onPressed: () {
+                                    onDeleteFile(e, selectedFilesController);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ) */

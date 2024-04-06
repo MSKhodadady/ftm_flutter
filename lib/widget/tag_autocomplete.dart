@@ -6,9 +6,13 @@ typedef TagAutocompleteOnSelected = void Function(String);
 class TagAutocomplete extends StatefulWidget {
   final TagAutocompleteOnSelected onSubmitted;
   final List<String> chosenTags;
+  final String? title;
 
   const TagAutocomplete(
-      {Key? key, required this.onSubmitted, required this.chosenTags})
+      {Key? key,
+      required this.onSubmitted,
+      required this.chosenTags,
+      this.title})
       : super(key: key);
 
   @override
@@ -63,10 +67,10 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
             _textController.clear();
             _textFocus.requestFocus();
           },
-          decoration: const InputDecoration(
-              border: OutlineInputBorder(),
+          decoration: InputDecoration(
+              border: const OutlineInputBorder(),
               // hintText: "Enter Tag Name",
-              label: Text("Choose Tag")),
+              label: Text(widget.title ?? "Choose Tag")),
         ),
         SizedBox(
             height: 40,
@@ -81,6 +85,12 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
                                     padding: const EdgeInsets.only(right: 1),
                                     child: Chip(
                                       label: Text(e),
+                                      color: MaterialStatePropertyAll(
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .secondary),
+                                      side: const BorderSide(
+                                          color: Colors.transparent),
                                       visualDensity: const VisualDensity(
                                           horizontal: 1, vertical: -4),
                                     ),

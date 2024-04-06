@@ -6,6 +6,7 @@ import 'package:ftm_flutter/database.dart';
 import 'package:ftm_flutter/files.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:window_manager/window_manager.dart';
 
 Directory getHomeDirectory() => Directory("/storage/emulated/0");
 
@@ -30,6 +31,18 @@ void main() async {
       }
     }
   } else if (Platform.isLinux) {
+    await windowManager.ensureInitialized();
+
+    var windowOptions = const WindowOptions(
+      size: Size(450, 670),
+      center: true,
+    );
+
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+
     await initFilesDir();
   }
 
@@ -39,7 +52,7 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatelessWidget with WindowListener {
   const MyApp({Key? key}) : super(key: key);
 
   @override
