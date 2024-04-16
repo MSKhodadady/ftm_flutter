@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/database.dart';
 import 'package:ftm_flutter/files.dart';
 import 'package:path/path.dart';
@@ -9,14 +8,20 @@ import 'package:sqlite3/sqlite3.dart';
 import 'package:tuple/tuple.dart';
 
 class FileTag {
-  const FileTag(this.fileName, this.tags) : empty = false;
+  const FileTag(
+    this.fileName,
+    this.tags,
+    this.path,
+  ) : empty = false;
   FileTag.empty()
       : fileName = "",
+        path = "",
         tags = [],
         empty = true;
 
   final String fileName;
   final List<String> tags;
+  final String path;
   final bool empty;
 
   List<Map<String, String>> toMaps() {
@@ -33,28 +38,29 @@ class FileTag {
             : [...fileTags, element]).toList();
   }
 
-  FileTag addTag(String newTag) => FileTag(fileName, [...tags, newTag]);
+  FileTag addTag(String newTag) => FileTag(fileName, [...tags, newTag], path);
+
+  bool equals(FileTag f2) => fileName == f2.fileName && path == f2.path;
 }
 
 class FileTagExistStatus {
   const FileTagExistStatus({required this.exists, required this.notExists});
 
-  final Iterable<FileItem> exists;
-  final Iterable<FileItem> notExists;
+  final Iterable<FileTag> exists;
+  final Iterable<FileTag> notExists;
 
-  FileTagExistStatus addExist(FileItem ft) =>
+  FileTagExistStatus addExist(FileTag ft) =>
       FileTagExistStatus(exists: [...exists, ft], notExists: notExists);
-  FileTagExistStatus addNotExist(FileItem ft) =>
+  FileTagExistStatus addNotExist(FileTag ft) =>
       FileTagExistStatus(exists: exists, notExists: [...notExists, ft]);
 }
 
 Future<void> insertAndMove_(
   FileTag ft,
-  String path,
   /* {bool copy = false} */
 ) async {
   //: move or copy file
-  var f = File(path);
+  var f = File(ft.path);
   // TODO copy or move by config, move by default
   await f.copy(join(filesPath(), ft.fileName));
   await f.delete();
@@ -83,8 +89,15 @@ Future<List<FileTag>> getFilesList(List<String> chosenTags) async {
     final res = db.select(query);
 
     return res
-        .map((e) => FileTag(
-            e[fileNameColumn], List<String>.from(json.decode(e[tagsColumn]))))
+        .map(
+          (e) => FileTag(
+            e[fileNameColumn],
+            List<String>.from(
+              json.decode(e[tagsColumn]),
+            ),
+            join(filesPath(), e[fileNameColumn]),
+          ),
+        )
         .toList();
   }
 
@@ -113,9 +126,9 @@ bool fileDbExists_(String fileName) {
   return dbExists;
 }
 
-Future<FileTagExistStatus> checkAllFilesExist(Iterable<FileItem> files) async {
+Future<FileTagExistStatus> checkAllFilesExist(Iterable<FileTag> files) async {
   return (await Future(
-          () => files.map((e) => Tuple2(e, checkFileExist(e.name)))))
+          () => files.map((e) => Tuple2(e, checkFileExist(e.fileName)))))
       .fold<FileTagExistStatus>(
           const FileTagExistStatus(exists: [], notExists: []),
           (acc, i) =>
@@ -127,8 +140,8 @@ Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
     if (checkFileExist(newFT.fileName)) {
       throw FileExists();
     } else {
-      var f = File(join(filesPath(), oldFT.fileName));
-      await f.rename(join(filesPath(), newFT.fileName));
+      var f = File(oldFT.path);
+      await f.rename(newFT.path);
 
       final db = getDB_();
 
@@ -182,17 +195,20 @@ class IntegrityRes {
 }
 
 Future<IntegrityRes> checkIntegrity() async {
+  String getFileName(File f) {
+    return basename(f.path);
+  }
+
   //: check all files in db
   final filesDir = Directory(filesPath());
-  final fileNames = (await filesDir.list().toList())
-      .whereType<File>()
-      .map((e) => basename(e.path));
+
+  final files = (await filesDir.list().toList()).whereType<File>();
 
   final filesToBeAddedToDb =
-      fileNames.where((element) => !fileDbExists_(element)).toList();
+      files.where((i) => !fileDbExists_(getFileName(i))).toList();
 
-  for (var fileName in filesToBeAddedToDb) {
-    final ft = FileTag(fileName, []);
+  for (var file in filesToBeAddedToDb) {
+    final ft = FileTag(getFileName(file), [], file.path);
     await insertDB_(ft);
   }
 
@@ -202,11 +218,14 @@ Future<IntegrityRes> checkIntegrity() async {
       .map<String>((e) => e[fileNameColumn]);
 
   final dbItemsToBeRemoved =
-      dbFiles.where((dbFile) => !fileNames.any((e) => e == dbFile));
+      dbFiles.where((dbFile) => !files.any((e) => getFileName(e) == dbFile));
 
   for (var e in dbItemsToBeRemoved) {
     getDB_().execute("DELETE FROM $fileTagTable WHERE $fileNameColumn = '$e';");
   }
 
-  return IntegrityRes(filesToBeAddedToDb, dbItemsToBeRemoved.toList());
+  return IntegrityRes(
+    filesToBeAddedToDb.map((e) => getFileName(e)).toList(),
+    dbItemsToBeRemoved.toList(),
+  );
 }

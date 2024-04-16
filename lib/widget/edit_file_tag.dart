@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
+import 'package:path/path.dart' as path;
 
 import '../data/file_tag.dart';
 
@@ -39,9 +42,19 @@ class _EditFileTagState extends State<EditFileTag> {
     }
     try {
       if (!mounted) return;
+
+      final newFileName = _textController.text;
+
+      final oldFile = File(widget.oldFileTag.path);
+      final newFilePath = path.join(
+        oldFile.parent.path,
+        newFileName,
+      );
+
       final newFileTag = FileTag(
-        _textController.text,
+        newFileName,
         chosenTags,
+        newFilePath,
       );
       await changeFile(widget.oldFileTag, newFileTag);
 

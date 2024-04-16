@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:ftm_flutter/data/file_item.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
-import 'package:ftm_flutter/widget/select_file.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart';
-import 'package:tuple/tuple.dart';
 
 class AddPage extends HookWidget {
   const AddPage({super.key});
@@ -21,15 +18,19 @@ class AddPage extends HookWidget {
       SelectedFilesController selectedFilesController,
       BuildContext context) async {
     //: convert selected files to FileItem
-    var newSelectedFiles = files.map((e) => FileItem(basename(e), e));
+    var newSelectedFiles = files.map((e) => FileTag(basename(e), [], e));
     //: check if files exist in our dir & db
     var status = await checkAllFilesExist(newSelectedFiles);
 
     if (status.exists.isNotEmpty) {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text(
-              "${status.exists.length} file(s) exists: ${status.exists.map((e) => e.name).join(", ")}")));
+            "${status.exists.length} file(s) exists: ${status.exists.map((e) => e.fileName).join(", ")}",
+          ),
+        ),
+      );
     }
 
     //: check if files selected before
@@ -50,9 +51,13 @@ class AddPage extends HookWidget {
           selectedFilesController.selectedFiles.every((e) => e.equals(s)));
 
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
           content: Text(
-              "selected before: ${selectedBefore.map((e) => e.name).join(", ")}")));
+            "selected before: ${selectedBefore.map((e) => e.fileName).join(", ")}",
+          ),
+        ),
+      );
     }
 
     //: update
@@ -60,9 +65,11 @@ class AddPage extends HookWidget {
   }
 
   void onDeleteFile(
-      FileItem fileItem, SelectedFilesController selectedFilesController) {
+    FileTag ft,
+    SelectedFilesController selectedFilesController,
+  ) {
     selectedFilesController.set(selectedFilesController.selectedFiles
-        .where((element) => !element.equals(fileItem))
+        .where((element) => !element.equals(ft))
         .toList());
   }
 
@@ -76,9 +83,8 @@ class AddPage extends HookWidget {
           builder: (routeController) => FloatingActionButton(
               onPressed: () async {
                 await Future.wait(selectedFilesController.selectedFiles
-                    .map((e) =>
-                        Tuple2(FileTag(e.name, chosenTags.value), e.path))
-                    .map((e) => insertAndMove_(e.item1, e.item2)));
+                    .map((e) => FileTag(e.fileName, chosenTags.value, e.path))
+                    .map((e) => insertAndMove_(e)));
 
                 routeController.setRoute(RoutePages.explorePage);
               },
@@ -110,7 +116,7 @@ class AddPage extends HookWidget {
               Column(
                 children: selectedFilesController.selectedFiles
                     .map((e) => FileTagRow(
-                        ft: FileTag(e.name, []),
+                        ft: FileTag(e.fileName, [], e.path),
                         filePath: e.path,
                         isImport: true,
                         onTagClick: (s) {},
@@ -127,18 +133,7 @@ class AddPage extends HookWidget {
                         side: MaterialStateProperty.all(BorderSide(
                             color: Theme.of(context).colorScheme.secondary))),
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => Dialog(
-                          child: SelectFile(
-                            doneSelection: (selectedFiles) {
-                              onSelectFile(selectedFiles,
-                                  selectedFilesController, context);
-                              Navigator.pop(context);
-                            },
-                          ),
-                        ),
-                      );
+                      RouteController.to.setRoute(RoutePages.selectFilePage);
                     },
                     child: Text(
                       "Add more Files ...",
@@ -153,34 +148,3 @@ class AddPage extends HookWidget {
     );
   }
 }
-
-
- /* Card(
-                          child: ListTile(
-                            leading: SizedBox(
-                                width: 50,
-                                child: FileLeading(filePath: e.path)),
-                            title: Text(e.name),
-                            trailing: Wrap(
-                              spacing: 2,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(ZiconOutline.pen),
-                                  onPressed: () {
-                                    // var k = showDialog(
-                                    //     context: context,
-                                    //     builder: ((context) {
-                                    //       // return EditFileTag(oldFileTag: e);
-                                    //     }));
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(ZiconOutline.trash),
-                                  onPressed: () {
-                                    onDeleteFile(e, selectedFilesController);
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ) */
