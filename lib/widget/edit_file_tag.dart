@@ -9,9 +9,12 @@ import 'package:path/path.dart' as path;
 import '../data/file_tag.dart';
 
 class EditFileTag extends StatefulWidget {
-  const EditFileTag({Key? key, required this.oldFileTag}) : super(key: key);
+  const EditFileTag(
+      {Key? key, required this.oldFileTag, required this.isImport})
+      : super(key: key);
 
   final FileTag oldFileTag;
+  final bool isImport;
 
   @override
   State<EditFileTag> createState() => _EditFileTagState();
@@ -45,18 +48,16 @@ class _EditFileTagState extends State<EditFileTag> {
 
       final newFileName = _textController.text;
 
-      final oldFile = File(widget.oldFileTag.path);
-      final newFilePath = path.join(
-        oldFile.parent.path,
-        newFileName,
-      );
-
       final newFileTag = FileTag(
         newFileName,
         chosenTags,
-        newFilePath,
+        widget.isImport
+            ? widget.oldFileTag.path
+            : path.join(
+                File(widget.oldFileTag.path).parent.path,
+                newFileName,
+              ),
       );
-      await changeFile(widget.oldFileTag, newFileTag);
 
       // ignore: use_build_context_synchronously
       Navigator.of(context).pop(Changed(newFileTag));
@@ -82,8 +83,6 @@ class _EditFileTagState extends State<EditFileTag> {
         actions: [
           TextButton(
               onPressed: (() {
-                deleteFile(widget.oldFileTag);
-
                 Navigator.pop(context, Deleted());
               }),
               child: Text(

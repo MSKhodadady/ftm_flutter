@@ -40,7 +40,7 @@ class _SelectFileState extends State<SelectFile> {
       );
     }
 
-    SelectedFilesController.to.set(status.notExists.toList());
+    SelectedFilesController.to.add(status.notExists.toList());
 
     RouteController.to.setRoute(RoutePages.addPage);
   }

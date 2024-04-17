@@ -21,7 +21,10 @@ class ChosenTagList extends StatelessWidget {
                 child: Chip(
                   onDeleted: () => onDeleted(e),
                   label: Text(e),
-                  backgroundColor: Colors.grey[100],
+                  // backgroundColor: Colors.grey[100],
+                  color: MaterialStatePropertyAll(
+                      Theme.of(context).colorScheme.secondary),
+                  side: const BorderSide(color: Colors.transparent),
                 ),
               ))
           .toList(),

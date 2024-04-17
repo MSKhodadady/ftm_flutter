@@ -72,12 +72,12 @@ class MainLayout extends HookWidget {
                           if (routeController.route != RoutePages.explorePage) {
                             routeController.setRoute(RoutePages.explorePage);
 
-                            selectedFilesController.set([]);
+                            selectedFilesController.clear();
                           }
                           break;
                         case 1: // add page
                           if (routeController.route != RoutePages.addPage) {
-                            selectedFilesController.set([]);
+                            selectedFilesController.clear();
 
                             routeController.setRoute(RoutePages.selectFilePage);
                           }

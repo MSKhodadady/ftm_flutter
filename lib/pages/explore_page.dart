@@ -116,8 +116,12 @@ class ExplorePage extends HookWidget {
                               onTagClick: (tag) {
                                 chosenTags.value = [...chosenTags.value, tag];
                               },
-                              onFileAction: (k) {
-                                if (k is Changed || k is Deleted) {
+                              onFileAction: (k) async {
+                                if (k is Changed) {
+                                  await changeFile(e, k.newFileTag);
+                                  refresh();
+                                } else if (k is Deleted) {
+                                  deleteFile(e);
                                   refresh();
                                 }
                               },

@@ -60,18 +60,24 @@ class FileTagRow extends StatelessWidget {
                 var k = await showDialog<ActionResult>(
                     context: context,
                     builder: (context) {
-                      return EditFileTag(oldFileTag: ft);
+                      return EditFileTag(
+                        oldFileTag: ft,
+                        isImport: isImport,
+                      );
                     });
 
                 onFileAction(k);
               },
             ),
-            IconButton(
-              onPressed: () {
-                onFileAction(Deleted());
-              },
-              icon: const Icon(ZiconOutline.trash),
-            )
+            //: remove file
+            isImport
+                ? IconButton(
+                    onPressed: () {
+                      onFileAction(Deleted());
+                    },
+                    icon: const Icon(ZiconOutline.trash),
+                  )
+                : const SizedBox.shrink()
           ],
         ));
   }
