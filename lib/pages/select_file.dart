@@ -5,6 +5,7 @@ import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/files.dart';
+import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/widget/file_leading.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
@@ -76,6 +77,12 @@ class _SelectFileState extends State<SelectFile> {
       appBar: AppBar(
         title: const Text("SelectFiles"),
         actions: appBarActions(context, filesList),
+        leading: IconButton(
+          icon: const Icon(ZiconOutline.back_1),
+          onPressed: () {
+            RouteController.to.setRoute(RoutePages.explorePage);
+          },
+        ),
       ),
       body: ListView.builder(
           itemCount: filesList.length,

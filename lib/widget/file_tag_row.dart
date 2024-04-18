@@ -12,12 +12,18 @@ class FileTagRow extends StatelessWidget {
     required this.onTagClick,
     required this.onFileAction,
     this.isImport = false,
+    this.isSelected,
+    this.onSelect,
+    this.onLongPres,
   });
 
   final FileTag ft;
   final String filePath;
   final bool isImport;
+  final bool? isSelected;
+  final void Function(bool? isAdded)? onSelect;
   final void Function(String) onTagClick;
+  final void Function()? onLongPres;
   final void Function(ActionResult?) onFileAction;
 
   @override
@@ -26,9 +32,17 @@ class FileTagRow extends StatelessWidget {
         title: Text(ft.fileName),
         leading: SizedBox(
           width: 50,
-          child: FileLeading(
-            filePath: filePath,
-          ),
+          child: isSelected == null
+              ? GestureDetector(
+                  onLongPress: onLongPres,
+                  child: FileLeading(
+                    filePath: filePath,
+                  ),
+                )
+              : Checkbox(
+                  value: isSelected,
+                  onChanged: onSelect,
+                ),
         ),
         subtitle: Wrap(
           children: ft.tags
@@ -51,34 +65,36 @@ class FileTagRow extends StatelessWidget {
                   ))
               .toList(),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(ZiconOutline.pen),
-              onPressed: () async {
-                var k = await showDialog<ActionResult>(
-                    context: context,
-                    builder: (context) {
-                      return EditFileTag(
-                        oldFileTag: ft,
-                        isImport: isImport,
-                      );
-                    });
+        trailing: isSelected == null
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(ZiconOutline.pen),
+                    onPressed: () async {
+                      var k = await showDialog<ActionResult>(
+                          context: context,
+                          builder: (context) {
+                            return EditFileTag(
+                              oldFileTag: ft,
+                              isImport: isImport,
+                            );
+                          });
 
-                onFileAction(k);
-              },
-            ),
-            //: remove file
-            isImport
-                ? IconButton(
-                    onPressed: () {
-                      onFileAction(Deleted());
+                      onFileAction(k);
                     },
-                    icon: const Icon(ZiconOutline.trash),
-                  )
-                : const SizedBox.shrink()
-          ],
-        ));
+                  ),
+                  //: remove file
+                  isImport
+                      ? IconButton(
+                          onPressed: () {
+                            onFileAction(Deleted());
+                          },
+                          icon: const Icon(ZiconOutline.trash),
+                        )
+                      : const SizedBox.shrink()
+                ],
+              )
+            : null);
   }
 }

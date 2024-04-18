@@ -21,7 +21,11 @@ class ExplorePage extends HookWidget {
         [refreshKey.value, chosenTags.value]);
     final fileTagsFuture = useFuture(fileTagMemo);
 
+    final selectedFiles = useState<List<FileTag>>([]);
+
     void refresh() {
+      //: sets a new key for refresh key,
+      //: causes fileTagMemo to function
       refreshKey.value = UniqueKey();
     }
 
@@ -123,6 +127,28 @@ class ExplorePage extends HookWidget {
                                 } else if (k is Deleted) {
                                   deleteFile(e);
                                   refresh();
+                                }
+                              },
+                              onLongPres: () {
+                                selectedFiles.value = [
+                                  ...selectedFiles.value,
+                                  e
+                                ];
+                              },
+                              isSelected: selectedFiles.value.isEmpty
+                                  ? null
+                                  : selectedFiles.value
+                                      .any((element) => element.equals(e)),
+                              onSelect: (isAdded) {
+                                if (isAdded != null && isAdded) {
+                                  selectedFiles.value = [
+                                    ...selectedFiles.value,
+                                    e
+                                  ];
+                                } else {
+                                  selectedFiles.value = selectedFiles.value
+                                      .where((element) => !element.equals(e))
+                                      .toList();
                                 }
                               },
                             ))

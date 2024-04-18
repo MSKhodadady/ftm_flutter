@@ -102,19 +102,21 @@ class _EditFileTagState extends State<EditFileTag> {
     return AlertDialog(
       actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        TextButton(
-          child: Text(
-            "Delete file",
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.secondary,
-            ),
-          ),
-          onPressed: () async {
-            setState(() {
-              deleteFileConfirm = true;
-            });
-          },
-        ),
+        widget.isImport
+            ? const SizedBox.shrink()
+            : TextButton(
+                child: Text(
+                  "Delete file",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+                onPressed: () async {
+                  setState(() {
+                    deleteFileConfirm = true;
+                  });
+                },
+              ),
         ElevatedButton(
           onPressed: onConfirm,
           child: const Text("Confirm"),

@@ -3,12 +3,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file_plus/open_file_plus.dart';
+// ignore: implementation_imports
 import 'package:open_file_plus/src/platform/linux.dart' as linux;
 
 class FileLeading extends StatelessWidget {
-  const FileLeading({super.key, required this.filePath});
+  const FileLeading({
+    super.key,
+    required this.filePath,
+    this.onLongPress,
+  });
 
   final String filePath;
+  final Function()? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +36,13 @@ class FileLeading extends StatelessWidget {
     }
 
     Widget defaultOpen(IconData icon) {
-      return IconButton(onPressed: openFile(filePath), icon: Icon(icon));
+      return GestureDetector(
+        onLongPress: onLongPress,
+        child: IconButton(
+          onPressed: openFile(filePath),
+          icon: Icon(icon),
+        ),
+      );
     }
 
     if (FileSystemEntity.isFileSync(filePath)) {
