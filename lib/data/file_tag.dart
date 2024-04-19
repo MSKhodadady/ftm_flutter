@@ -157,19 +157,23 @@ Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
     }
   }
 
-  if (!listEquals(oldFT.tags, newFT.tags)) {
-    final db = getDB_();
-
-    await Future(
-      () {
-        db.execute("""
-            UPDATE $fileTagTable
-            SET $tagsColumn = '${jsonEncode(newFT.tags)}'
-            WHERE $fileNameColumn = '${newFT.fileName}';
-          """);
-      },
-    );
+  if (!listEquals(newFT.tags, oldFT.tags)) {
+    await changeFileTags(newFT, newFT.tags);
   }
+}
+
+Future<void> changeFileTags(FileTag ft, tags) async {
+  final db = getDB_();
+
+  await Future(
+    () {
+      db.execute("""
+            UPDATE $fileTagTable
+            SET $tagsColumn = '${jsonEncode(tags)}'
+            WHERE $fileNameColumn = '${ft.fileName}';
+          """);
+    },
+  );
 }
 
 class FileExists implements Exception {}

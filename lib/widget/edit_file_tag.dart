@@ -66,11 +66,11 @@ class _EditFileTagState extends State<EditFileTag> {
         anotherFileExists = "another file exists with this name";
       });
 
-      Future.delayed(
-          const Duration(seconds: 2),
-          () => setState(() {
-                anotherFileExists = null;
-              }));
+      Future.delayed(const Duration(seconds: 2), () {
+        setState(() {
+          anotherFileExists = null;
+        });
+      });
     }
   }
 
@@ -143,9 +143,11 @@ class _EditFileTagState extends State<EditFileTag> {
             ),
             addTag
                 ? TagAutocomplete(
-                    onSubmitted: (p0) => setState(() {
-                          chosenTags = [...chosenTags, p0];
-                        }),
+                    onSubmitted: (p0) {
+                      setState(() {
+                        chosenTags = [...chosenTags, p0];
+                      });
+                    },
                     chosenTags: chosenTags)
                 : ElevatedButton(
                     onPressed: () {
@@ -158,11 +160,14 @@ class _EditFileTagState extends State<EditFileTag> {
               height: 10,
             ),
             ChosenTagList(
-                chosenTags: chosenTags,
-                onDeleted: (e) => setState(() {
-                      chosenTags =
-                          chosenTags.where((element) => element != e).toList();
-                    })),
+              chosenTags: chosenTags,
+              onDeleted: (e) {
+                setState(() {
+                  chosenTags =
+                      chosenTags.where((element) => element != e).toList();
+                });
+              },
+            ),
           ],
         ),
       ),

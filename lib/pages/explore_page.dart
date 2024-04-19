@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/files.dart';
+import 'package:ftm_flutter/widget/add_tag_files.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
@@ -67,17 +68,56 @@ class ExplorePage extends HookWidget {
         mini: true,
         child: const Icon(Icons.refresh),
       ),
+      appBar: selectedFiles.value.isEmpty
+          ? null
+          : AppBar(
+              actions: [
+                OutlinedButton(
+                    onPressed: () {
+                      selectedFiles.value = [];
+                    },
+                    child: const Text("Deselect")),
+                TextButton(
+                    onPressed: () async {
+                      final newTags = await showDialog<List<String>>(
+                        context: context,
+                        builder: (context) => const AddTagFiles(),
+                      );
+
+                      if (newTags != null && newTags.isNotEmpty) {
+                        await Future.wait(
+                          selectedFiles.value.map((e) async {
+                            await changeFileTags(
+                              e,
+                              [
+                                ...{...e.tags, ...newTags}
+                              ],
+                            );
+                          }),
+                        );
+
+                        selectedFiles.value = [];
+
+                        refresh();
+                      }
+                    },
+                    child: const Text("Add Tag")),
+                TextButton(onPressed: () {}, child: const Text("Delete")),
+              ],
+            ),
       body: ListView(
         children: [
           //: tag chooser
-          Container(
-            padding: const EdgeInsets.all(10),
-            child: TagAutocomplete(
-                onSubmitted: (tag) {
-                  chosenTags.value = [...chosenTags.value, tag];
-                },
-                chosenTags: chosenTags.value),
-          ),
+          selectedFiles.value.isEmpty
+              ? Container(
+                  padding: const EdgeInsets.all(10),
+                  child: TagAutocomplete(
+                      onSubmitted: (tag) {
+                        chosenTags.value = [...chosenTags.value, tag];
+                      },
+                      chosenTags: chosenTags.value),
+                )
+              : const SizedBox.shrink(),
           //: chosen tags
           AnimatedSize(
             duration: const Duration(milliseconds: 500),
