@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
+import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
@@ -59,16 +60,33 @@ class AddPage extends HookWidget {
                     .map((e) => FileTagRow(
                           ft: e,
                           filePath: e.path,
-                          isImport: true,
                           onTagClick: (s) {},
-                          onFileAction: (s) {
-                            if (s is Changed) {
-                              selectedFilesController.changeFile(
-                                  e, s.newFileTag);
-                            } else if (s is Deleted) {
-                              selectedFilesController.remove(e);
-                            }
-                          },
+                          actions: [
+                            IconButton(
+                              icon: const Icon(ZiconOutline.pen),
+                              onPressed: () async {
+                                var k = await showDialog<ActionResult>(
+                                    context: context,
+                                    builder: (context) {
+                                      return EditFileTag(
+                                        oldFileTag: e,
+                                        isImport: true,
+                                      );
+                                    });
+
+                                if (k is Changed) {
+                                  selectedFilesController.changeFile(
+                                      e, k.newFileTag);
+                                }
+                              },
+                            ),
+                            IconButton(
+                              onPressed: () {
+                                selectedFilesController.remove(e);
+                              },
+                              icon: const Icon(ZiconOutline.trash),
+                            )
+                          ],
                         ))
                     .toList(),
               ),

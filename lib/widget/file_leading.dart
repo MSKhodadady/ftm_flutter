@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:mime/mime.dart';
 import 'package:open_file_plus/open_file_plus.dart';
-// ignore: implementation_imports
-import 'package:open_file_plus/src/platform/linux.dart' as linux;
 
 class FileLeading extends StatelessWidget {
   const FileLeading({
@@ -19,20 +17,9 @@ class FileLeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void Function() openFile(String filePath) {
-      if (Platform.isLinux) {
-        var k = filePath
-            .replaceAll("'", "\\'")
-            .replaceAll('(', '\\(')
-            .replaceAll(')', '\\)');
-
-        return () {
-          linux.system(['xdg-open', k]);
-        };
-      } else {
-        return () {
-          OpenFile.open(filePath);
-        };
-      }
+      return () {
+        OpenFile.open(filePath);
+      };
     }
 
     Widget defaultOpen(IconData icon) {

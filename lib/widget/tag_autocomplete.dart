@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
+import 'package:ftm_flutter/database.dart';
 
 typedef TagAutocompleteOnSelected = void Function(String);
 
@@ -43,12 +44,14 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
     return txt == ''
         ? ts
             .where((element) => widget.chosenTags.every((ct) => ct != element))
+            .where((element) => element != trashTag)
             .take(5)
             .toList()
         : ts
             // TODO contains case-intensive
             .where((element) => element.contains(txt))
             .where((element) => widget.chosenTags.every((ct) => ct != element))
+            .where((element) => element != trashTag)
             .take(5)
             .toList();
   }

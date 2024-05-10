@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
+import 'package:ftm_flutter/database.dart';
 import 'package:ftm_flutter/files.dart';
+import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/widget/add_tag_files.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
+import 'package:ftm_flutter/widget/yes_no_dialog.dart';
 import 'package:path/path.dart';
 
 bool integrityChecked = false;
@@ -18,7 +21,11 @@ class ExplorePage extends HookWidget {
     final chosenTags = useState<List<String>>([]);
     final refreshKey = useState(UniqueKey());
     //: returns a cached value of returned value of a function
-    final fileTagMemo = useMemoized(() => getFilesList(chosenTags.value),
+    final fileTagMemo = useMemoized(
+        () => getFilesList(
+              includeTags: chosenTags.value,
+              excludeTags: [trashTag],
+            ),
         [refreshKey.value, chosenTags.value]);
     final fileTagsFuture = useFuture(fileTagMemo);
 
@@ -37,13 +44,17 @@ class ExplorePage extends HookWidget {
         var snackText = "";
 
         if (res.filesToBeAddedToDb.isNotEmpty) {
-          snackText =
-              "${snackText}Some files added: ${res.filesToBeAddedToDb.toList().join(" ,")}";
+          // ignore: prefer_interpolation_to_compose_strings
+          snackText = snackText +
+              "Some files added: " +
+              res.filesToBeAddedToDb.toList().join(" ,");
         }
 
         if (res.dbItemsToBeRemoved.isNotEmpty) {
-          snackText =
-              "${snackText == '' ? '' : "$snackText\n"}Some Items deleted because of missing file: ${res.dbItemsToBeRemoved.toList().join(" ,")}";
+          // ignore: prefer_interpolation_to_compose_strings
+          snackText = (snackText == '' ? '' : "$snackText\n") +
+              "Some Items deleted because of missing file: " +
+              res.dbItemsToBeRemoved.toList().join(" ,");
         }
 
         if (snackText != '') {
@@ -71,12 +82,20 @@ class ExplorePage extends HookWidget {
       appBar: selectedFiles.value.isEmpty
           ? null
           : AppBar(
+              leadingWidth: 200,
+              leading: Container(
+                margin: const EdgeInsets.only(left: 5),
+                child: Row(
+                  children: [
+                    TextButton(
+                        onPressed: () {
+                          selectedFiles.value = [];
+                        },
+                        child: const Text("Deselect")),
+                  ],
+                ),
+              ),
               actions: [
-                OutlinedButton(
-                    onPressed: () {
-                      selectedFiles.value = [];
-                    },
-                    child: const Text("Deselect")),
                 TextButton(
                     onPressed: () async {
                       final newTags = await showDialog<List<String>>(
@@ -102,7 +121,27 @@ class ExplorePage extends HookWidget {
                       }
                     },
                     child: const Text("Add Tag")),
-                TextButton(onPressed: () {}, child: const Text("Delete")),
+                TextButton(
+                    onPressed: () async {
+                      final res = await showDialog<bool?>(
+                          context: context,
+                          builder: (context) => const YesNoDialog(
+                                quest: "Move to Trash?",
+                              ));
+
+                      if (res == true) {
+                        Future.wait(
+                          selectedFiles.value.map((e) async {
+                            await changeFileTags(e, [...e.tags, trashTag]);
+                          }),
+                        );
+
+                        selectedFiles.value = [];
+
+                        refresh();
+                      }
+                    },
+                    child: const Text("Trash")),
               ],
             ),
       body: ListView(
@@ -160,21 +199,26 @@ class ExplorePage extends HookWidget {
                               onTagClick: (tag) {
                                 chosenTags.value = [...chosenTags.value, tag];
                               },
-                              onFileAction: (k) async {
-                                if (k is Changed) {
-                                  await changeFile(e, k.newFileTag);
-                                  refresh();
-                                } else if (k is Deleted) {
-                                  deleteFile(e);
-                                  refresh();
-                                }
-                              },
-                              onLongPres: () {
-                                selectedFiles.value = [
-                                  ...selectedFiles.value,
-                                  e
-                                ];
-                              },
+                              actions: [
+                                IconButton(
+                                  icon: const Icon(ZiconOutline.pen),
+                                  onPressed: () async {
+                                    var k = await showDialog<ActionResult>(
+                                        context: context,
+                                        builder: (context) {
+                                          return EditFileTag(
+                                            oldFileTag: e,
+                                            isImport: false,
+                                          );
+                                        });
+
+                                    if (k is Changed) {
+                                      await changeFile(e, k.newFileTag);
+                                      refresh();
+                                    }
+                                  },
+                                )
+                              ],
                               isSelected: selectedFiles.value.isEmpty
                                   ? null
                                   : selectedFiles.value

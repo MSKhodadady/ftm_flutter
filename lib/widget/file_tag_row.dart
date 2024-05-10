@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
-import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_leading.dart';
 
 class FileTagRow extends StatelessWidget {
@@ -9,22 +7,18 @@ class FileTagRow extends StatelessWidget {
     super.key,
     required this.ft,
     required this.filePath,
-    required this.onTagClick,
-    required this.onFileAction,
-    this.isImport = false,
+    this.onTagClick,
     this.isSelected,
     this.onSelect,
-    this.onLongPres,
+    required this.actions,
   });
 
   final FileTag ft;
   final String filePath;
-  final bool isImport;
   final bool? isSelected;
   final void Function(bool? isAdded)? onSelect;
-  final void Function(String) onTagClick;
-  final void Function()? onLongPres;
-  final void Function(ActionResult?) onFileAction;
+  final void Function(String tag)? onTagClick;
+  final List<Widget> actions;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +28,11 @@ class FileTagRow extends StatelessWidget {
           width: 50,
           child: isSelected == null
               ? GestureDetector(
-                  onLongPress: onLongPres,
+                  onLongPress: () {
+                    if (onSelect != null) {
+                      onSelect!(true);
+                    }
+                  },
                   child: FileLeading(
                     filePath: filePath,
                   ),
@@ -51,7 +49,9 @@ class FileTagRow extends StatelessWidget {
                         const EdgeInsets.symmetric(vertical: 10, horizontal: 1),
                     child: GestureDetector(
                       onTap: () {
-                        onTagClick(t);
+                        if (onTagClick != null) {
+                          onTagClick!(t);
+                        }
                       },
                       child: Chip(
                         label: Text(t),
@@ -66,35 +66,7 @@ class FileTagRow extends StatelessWidget {
               .toList(),
         ),
         trailing: isSelected == null
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(ZiconOutline.pen),
-                    onPressed: () async {
-                      var k = await showDialog<ActionResult>(
-                          context: context,
-                          builder: (context) {
-                            return EditFileTag(
-                              oldFileTag: ft,
-                              isImport: isImport,
-                            );
-                          });
-
-                      onFileAction(k);
-                    },
-                  ),
-                  //: remove file
-                  isImport
-                      ? IconButton(
-                          onPressed: () {
-                            onFileAction(Deleted());
-                          },
-                          icon: const Icon(ZiconOutline.trash),
-                        )
-                      : const SizedBox.shrink()
-                ],
-              )
+            ? Row(mainAxisSize: MainAxisSize.min, children: actions)
             : null);
   }
 }

@@ -12,17 +12,11 @@ class FileTag {
     this.fileName,
     this.tags,
     this.path,
-  ) : empty = false;
-  FileTag.empty()
-      : fileName = "",
-        path = "",
-        tags = [],
-        empty = true;
+  );
 
   final String fileName;
   final List<String> tags;
   final String path;
-  final bool empty;
 
   List<Map<String, String>> toMaps() {
     return tags.map((tag) => {'fileName': fileName, 'tag': tag}).toList();
@@ -41,19 +35,13 @@ class FileTag {
   FileTag addTag(String newTag) => FileTag(fileName, [...tags, newTag], path);
 
   bool equals(FileTag f2) => fileName == f2.fileName && path == f2.path;
+
+  bool isTrashFile() {
+    return tags.contains(trashTag);
+  }
 }
 
-class FileTagExistStatus {
-  const FileTagExistStatus({required this.exists, required this.notExists});
-
-  final Iterable<FileTag> exists;
-  final Iterable<FileTag> notExists;
-
-  FileTagExistStatus addExist(FileTag ft) =>
-      FileTagExistStatus(exists: [...exists, ft], notExists: notExists);
-  FileTagExistStatus addNotExist(FileTag ft) =>
-      FileTagExistStatus(exists: exists, notExists: [...notExists, ft]);
-}
+//: ----------------------------------------------------------------------------
 
 Future<void> insertAndMove_(
   FileTag ft,
@@ -76,13 +64,24 @@ Future<void> insertDB_(FileTag ft) async {
   });
 }
 
-Future<List<FileTag>> getFilesList(List<String> chosenTags) async {
+//: ----------------------------------------------------------------------------
+
+Future<List<FileTag>> getFilesList({
+  List<String> includeTags = const [],
+  List<String> excludeTags = const [],
+}) async {
   List<FileTag> computation() {
     final db = getDB_();
 
-    final whereClause = chosenTags.isNotEmpty
-        ? "WHERE ${chosenTags.map((tag) => "json_string_list_element_exist($tagsColumn ->> '\$', '$tag')").join(" AND ")}"
-        : "";
+    final conditionList = [
+      ...includeTags.map((tag) =>
+          "json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
+      ...excludeTags.map((tag) =>
+          "not json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
+    ];
+
+    final whereClause =
+        conditionList.isNotEmpty ? "WHERE ${conditionList.join(" AND ")}" : "";
 
     final query = "SELECT * FROM $fileTagTable $whereClause;";
 
@@ -94,7 +93,7 @@ Future<List<FileTag>> getFilesList(List<String> chosenTags) async {
             e[fileNameColumn],
             List<String>.from(
               json.decode(e[tagsColumn]),
-            ),
+            ).where((element) => element != trashTag).toList(),
             join(filesPath(), e[fileNameColumn]),
           ),
         )
@@ -111,6 +110,8 @@ Future<Set<String>> tagsList_() => Future(() => Set.from(sqlite3
     .fold<List<String>>(
         [], (previousValue, element) => previousValue + element)));
 
+//: ----------------------------------------------------------------------------
+
 bool checkFileExist(String fileName) {
   final fileExists = File(join(filesPath(), fileName)).existsSync();
 
@@ -126,6 +127,18 @@ bool fileDbExists_(String fileName) {
   return dbExists;
 }
 
+class FileTagExistStatus {
+  const FileTagExistStatus({required this.exists, required this.notExists});
+
+  final Iterable<FileTag> exists;
+  final Iterable<FileTag> notExists;
+
+  FileTagExistStatus addExist(FileTag ft) =>
+      FileTagExistStatus(exists: [...exists, ft], notExists: notExists);
+  FileTagExistStatus addNotExist(FileTag ft) =>
+      FileTagExistStatus(exists: exists, notExists: [...notExists, ft]);
+}
+
 Future<FileTagExistStatus> checkAllFilesExist(Iterable<FileTag> files) async {
   return (await Future(
           () => files.map((e) => Tuple2(e, checkFileExist(e.fileName)))))
@@ -135,10 +148,14 @@ Future<FileTagExistStatus> checkAllFilesExist(Iterable<FileTag> files) async {
               i.item2 ? acc.addExist(i.item1) : acc.addNotExist(i.item1));
 }
 
+//: ----------------------------------------------------------------------------
+
+class FileExistsException implements Exception {}
+
 Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
   if (oldFT.fileName != newFT.fileName) {
     if (checkFileExist(newFT.fileName)) {
-      throw FileExists();
+      throw FileExistsException();
     } else {
       var f = File(oldFT.path);
       await f.rename(newFT.path);
@@ -162,7 +179,7 @@ Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
   }
 }
 
-Future<void> changeFileTags(FileTag ft, tags) async {
+Future<void> changeFileTags(FileTag ft, List<String> tags) async {
   final db = getDB_();
 
   await Future(
@@ -176,7 +193,7 @@ Future<void> changeFileTags(FileTag ft, tags) async {
   );
 }
 
-class FileExists implements Exception {}
+//: ----------------------------------------------------------------------------
 
 void deleteFile(FileTag fileTag) {
   final db = getDB_();
@@ -191,6 +208,8 @@ void deleteFile(FileTag fileTag) {
     // ignored
   }
 }
+
+//: ----------------------------------------------------------------------------
 
 class IntegrityRes {
   final List<String> filesToBeAddedToDb, dbItemsToBeRemoved;
@@ -232,4 +251,10 @@ Future<IntegrityRes> checkIntegrity() async {
     filesToBeAddedToDb.map((e) => getFileName(e)).toList(),
     dbItemsToBeRemoved.toList(),
   );
+}
+
+//: ----------------------------------------------------------------------------
+
+void restoreTrashFile(FileTag f) {
+  changeFileTags(f, f.tags.where((element) => element != trashTag).toList());
 }

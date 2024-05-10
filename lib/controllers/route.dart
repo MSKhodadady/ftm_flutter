@@ -1,6 +1,11 @@
 import 'package:get/get.dart';
 
-enum RoutePages { explorePage, addPage, selectFilePage }
+enum RoutePages {
+  explorePage,
+  addPage,
+  selectFilePage,
+  trashPage,
+}
 
 class RouteController extends GetxController {
   RoutePages route = RoutePages.explorePage;

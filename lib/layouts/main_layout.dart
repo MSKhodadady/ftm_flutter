@@ -6,6 +6,7 @@ import 'package:ftm_flutter/pages/explore_page.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/pages/select_file.dart';
+import 'package:ftm_flutter/pages/trash_page.dart';
 import 'package:get/get.dart';
 
 Widget gotoRoute(RoutePages r) {
@@ -16,6 +17,8 @@ Widget gotoRoute(RoutePages r) {
       return const AddPage();
     case RoutePages.selectFilePage:
       return const SelectFile();
+    case RoutePages.trashPage:
+      return const TrashPage();
     default:
       return Container();
   }
@@ -27,6 +30,8 @@ int getRouteIndex(RoutePages r) {
       return 0;
     case RoutePages.addPage:
       return 1;
+    case RoutePages.trashPage:
+      return 2;
     default:
       return 0;
   }
@@ -64,6 +69,10 @@ class MainLayout extends HookWidget {
                         icon: Icon(ZiconOutline.plus_2),
                         label: "Import",
                       ),
+                      BottomNavigationBarItem(
+                        icon: Icon(ZiconOutline.trash),
+                        label: "Trash",
+                      ),
                     ],
                     currentIndex: getRouteIndex(routeController.route),
                     onTap: (index) async {
@@ -75,13 +84,17 @@ class MainLayout extends HookWidget {
                             selectedFilesController.clear();
                           }
                           break;
-                        case 1: // add page
+                        case 1: //: add page
                           if (routeController.route != RoutePages.addPage) {
                             selectedFilesController.clear();
 
                             routeController.setRoute(RoutePages.selectFilePage);
                           }
                           break;
+                        case 2: //: trash page
+                          if (routeController.route != RoutePages.trashPage) {
+                            routeController.setRoute(RoutePages.trashPage);
+                          }
                       }
                     },
                   ),

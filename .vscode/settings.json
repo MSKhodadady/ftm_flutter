@@ -1,11 +1,12 @@
 {
-    "cSpell.words": [
-        "fluttericon",
-        "fontello",
-        "Getx",
-        "sdcard",
-        "sqflite",
-        "typeahead",
-        "Zicon"
-    ]
+  "cSpell.words": [
+    "fluttericon",
+    "fontello",
+    "Getx",
+    "sdcard",
+    "sqflite",
+    "typeahead",
+    "Zicon"
+  ],
+  "cmake.sourceDirectory": "/home/shockwave/Projects/FTM/ftm_flutter/linux"
 }

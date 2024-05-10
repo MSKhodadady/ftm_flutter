@@ -61,7 +61,7 @@ class _EditFileTagState extends State<EditFileTag> {
 
       // ignore: use_build_context_synchronously
       Navigator.of(context).pop(Changed(newFileTag));
-    } on FileExists {
+    } on FileExistsException {
       setState(() {
         anotherFileExists = "another file exists with this name";
       });
@@ -76,47 +76,8 @@ class _EditFileTagState extends State<EditFileTag> {
 
   @override
   Widget build(BuildContext context) {
-    if (deleteFileConfirm) {
-      return AlertDialog(
-        content: const Text("Are You sure to delete file?"),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-        actions: [
-          TextButton(
-              onPressed: (() {
-                Navigator.pop(context, Deleted());
-              }),
-              child: Text(
-                "Yes",
-                style:
-                    TextStyle(color: Theme.of(context).colorScheme.secondary),
-              )),
-          ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, NotChanged());
-              },
-              child: const Text("No"))
-        ],
-      );
-    }
-
     return AlertDialog(
-      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
-        widget.isImport
-            ? const SizedBox.shrink()
-            : TextButton(
-                child: Text(
-                  "Delete file",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
-                ),
-                onPressed: () async {
-                  setState(() {
-                    deleteFileConfirm = true;
-                  });
-                },
-              ),
         ElevatedButton(
           onPressed: onConfirm,
           child: const Text("Confirm"),
@@ -184,5 +145,3 @@ class Changed implements ActionResult {
 
   Changed(this.newFileTag);
 }
-
-class Deleted implements ActionResult {}

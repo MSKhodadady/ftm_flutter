@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
@@ -10,22 +11,15 @@ import 'package:ftm_flutter/widget/file_leading.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
-class SelectFile extends StatefulWidget {
+class SelectFile extends HookWidget {
   const SelectFile({super.key});
 
-  @override
-  State<SelectFile> createState() => _SelectFileState();
-}
-
-class _SelectFileState extends State<SelectFile> {
-  String currentPath = homePath();
-  bool multipleSelect = false;
-
-  List<String> selectedFilesPath = [];
-
-  Future<void> doneSelection(BuildContext context) async {
+  Future<void> doneSelection(
+    BuildContext context,
+    ValueNotifier<List<String>> selectedFilesPath,
+  ) async {
     final status = await checkAllFilesExist(
-      selectedFilesPath.map(
+      selectedFilesPath.value.map(
         (e) => FileTag(basename(e), [], e),
       ),
     );
@@ -48,13 +42,19 @@ class _SelectFileState extends State<SelectFile> {
 
   @override
   Widget build(BuildContext context) {
-    final d = Directory(currentPath);
+    //: state
+    final currentPath = useState(homePath());
+    final multipleSelect = useState(false);
+    final selectedFilesPath = useState<List<String>>([]);
+
+    //: prepare
+    final d = Directory(currentPath.value);
 
     var fl = d
         .listSync()
         .where((element) => !basename(element.path).startsWith('.'));
 
-    if (currentPath == homePath()) {
+    if (currentPath.value == homePath()) {
       fl = fl.where((element) => basename(element.path) != mainFolderName);
     }
 
@@ -73,10 +73,24 @@ class _SelectFileState extends State<SelectFile> {
 
     filesList = [...separated.item1.toList(), ...separated.item2.toList()];
 
+    //: functions
+    void addToSelectedFiles(String path) {
+      selectedFilesPath.value = [...selectedFilesPath.value, path];
+    }
+
+    void removeFromSelectedFiles(String path) {
+      selectedFilesPath.value =
+          selectedFilesPath.value.where((element) => element != path).toList();
+      if (selectedFilesPath.value.isEmpty) {
+        multipleSelect.value = false;
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("SelectFiles"),
-        actions: appBarActions(context, filesList),
+        actions: appBarActions(
+            context, filesList, multipleSelect, selectedFilesPath, currentPath),
         leading: IconButton(
           icon: const Icon(ZiconOutline.back_1),
           onPressed: () {
@@ -93,9 +107,10 @@ class _SelectFileState extends State<SelectFile> {
                 width: 100,
                 child: FileLeading(filePath: filesList[index].path),
               ),
-              trailing: multipleSelect && isFile(filesList[index].path)
+              trailing: multipleSelect.value && isFile(filesList[index].path)
                   ? Checkbox(
-                      value: selectedFilesPath.contains(filesList[index].path),
+                      value: selectedFilesPath.value
+                          .contains(filesList[index].path),
                       onChanged: (newValue) {
                         final p = filesList[index].path;
                         if (newValue != null && isFile(p)) {
@@ -112,29 +127,25 @@ class _SelectFileState extends State<SelectFile> {
                 final p = filesList[index].path;
 
                 if (isDir(filesList[index].path)) {
-                  setState(() {
-                    currentPath = filesList[index].path;
-                  });
-                } else if (multipleSelect) {
-                  if (selectedFilesPath.contains(p)) {
+                  currentPath.value = filesList[index].path;
+                } else if (multipleSelect.value) {
+                  if (selectedFilesPath.value.contains(p)) {
                     removeFromSelectedFiles(p);
                   } else {
                     addToSelectedFiles(p);
                   }
                 } else {
                   addToSelectedFiles(p);
-                  doneSelection(context);
+                  doneSelection(context, selectedFilesPath);
                 }
               },
               onLongPress: () {
                 if (isFile(filesList[index].path)) {
-                  setState(() {
-                    multipleSelect = true;
-                    selectedFilesPath = selectedFilesPath = [
-                      ...selectedFilesPath,
-                      filesList[index].path
-                    ];
-                  });
+                  multipleSelect.value = true;
+                  selectedFilesPath.value = [
+                    ...selectedFilesPath.value,
+                    filesList[index].path
+                  ];
                 }
               },
             ));
@@ -142,44 +153,33 @@ class _SelectFileState extends State<SelectFile> {
     );
   }
 
-  void addToSelectedFiles(String path) {
-    setState(() {
-      selectedFilesPath = selectedFilesPath = [...selectedFilesPath, path];
-    });
-  }
-
-  void removeFromSelectedFiles(String path) {
-    setState(() {
-      selectedFilesPath =
-          selectedFilesPath.where((element) => element != path).toList();
-      if (selectedFilesPath.isEmpty) {
-        multipleSelect = false;
-      }
-    });
-  }
-
   List<Widget> appBarActions(
-      BuildContext context, List<FileSystemEntity> filesList) {
+    BuildContext context,
+    List<FileSystemEntity> filesList,
+    ValueNotifier<bool> multipleSelect,
+    ValueNotifier<List<String>> selectedFilesPath,
+    ValueNotifier<String> currentPath,
+  ) {
+    bool allSelected(List<FileSystemEntity> fs) => fs
+        .map((e) => e.path)
+        .every((element) => selectedFilesPath.value.contains(element));
+
     List<Widget> res = [];
 
-    if (multipleSelect) {
+    if (multipleSelect.value) {
       res = [
         ...res,
         TextButton(
           onPressed: () {
             if (allSelected(
                 filesList.where((element) => isFile(element.path)).toList())) {
-              setState(() {
-                selectedFilesPath = [];
-                multipleSelect = false;
-              });
+              selectedFilesPath.value = [];
+              multipleSelect.value = false;
             } else {
-              setState(() {
-                selectedFilesPath = filesList
-                    .where((element) => isFile(element.path))
-                    .map((e) => e.path)
-                    .toList();
-              });
+              selectedFilesPath.value = filesList
+                  .where((element) => isFile(element.path))
+                  .map((e) => e.path)
+                  .toList();
             }
           },
           child: Text(
@@ -191,21 +191,19 @@ class _SelectFileState extends State<SelectFile> {
         ),
         TextButton(
           onPressed: () {
-            doneSelection(context);
+            doneSelection(context, selectedFilesPath);
           },
           child: const Text("Done"),
         ),
       ];
     }
-    if (!(multipleSelect || currentPath == homePath())) {
+    if (!(multipleSelect.value || currentPath.value == homePath())) {
       res = [
         ...res,
         TextButton(
             onPressed: (() {
-              final d = Directory(currentPath);
-              setState(() {
-                currentPath = d.parent.path;
-              });
+              final d = Directory(currentPath.value);
+              currentPath.value = d.parent.path;
             }),
             child: const Text(
               "Go Up",
@@ -215,10 +213,6 @@ class _SelectFileState extends State<SelectFile> {
 
     return res;
   }
-
-  bool allSelected(List<FileSystemEntity> fs) => fs
-      .map((e) => e.path)
-      .every((element) => selectedFilesPath.contains(element));
 }
 
 bool isFile(String path) => FileSystemEntity.isFileSync(path);

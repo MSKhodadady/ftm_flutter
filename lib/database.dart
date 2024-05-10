@@ -17,6 +17,7 @@ Future<void> initDB() async {
       _db?.select("PRAGMA user_version").first['user_version'] as int;
   if (kDebugMode) print("current database version is: $dbVersion");
 
+  //: migration 1
   if (dbVersion < 1) {
     _db?.execute('CREATE TABLE fileTag (fileName TEXT PRIMARY KEY, tags JSON)');
   }
@@ -25,6 +26,7 @@ Future<void> initDB() async {
   const lastDbVersion = 1;
   //: }
 
+  //: set migration version to last one
   if (dbVersion != lastDbVersion) {
     _db?.execute("PRAGMA user_version = $lastDbVersion");
 
@@ -61,3 +63,5 @@ Database getDB_() {
 const fileTagTable = "fileTag";
 const fileNameColumn = "fileName";
 const tagsColumn = "tags";
+
+const trashTag = '__TRASH';
