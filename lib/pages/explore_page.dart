@@ -89,9 +89,17 @@ class ExplorePage extends HookWidget {
                   children: [
                     TextButton(
                         onPressed: () {
-                          selectedFiles.value = [];
+                          if (selectedFiles.value.length !=
+                              (fileTagsFuture.data ?? []).length) {
+                            selectedFiles.value = fileTagsFuture.data ?? [];
+                          } else {
+                            selectedFiles.value = [];
+                          }
                         },
-                        child: const Text("Deselect")),
+                        child: Text(selectedFiles.value.length !=
+                                (fileTagsFuture.data ?? []).length
+                            ? "Select All"
+                            : "Deselect All")),
                   ],
                 ),
               ),
