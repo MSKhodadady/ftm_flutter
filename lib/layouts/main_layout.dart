@@ -57,29 +57,25 @@ class MainLayout extends HookWidget {
             bottomNavigationBar: routeController.route ==
                     RoutePages.selectFilePage
                 ? null
-                : BottomNavigationBar(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    selectedItemColor: Theme.of(context).colorScheme.onPrimary,
-                    unselectedItemColor:
-                        Theme.of(context).colorScheme.onPrimary,
-                    selectedFontSize: 15,
-                    selectedIconTheme: const IconThemeData(size: 28),
-                    items: const [
-                      BottomNavigationBarItem(
+                : NavigationBar(
+                    destinations: const [
+                      NavigationDestination(
                         icon: Icon(ZiconOutline.search),
                         label: "Explore",
                       ),
-                      BottomNavigationBarItem(
+                      NavigationDestination(
                         icon: Icon(ZiconOutline.plus_2),
                         label: "Import",
                       ),
-                      BottomNavigationBarItem(
+                      NavigationDestination(
                         icon: Icon(ZiconOutline.trash),
                         label: "Trash",
                       ),
+                      NavigationDestination(
+                          icon: Icon(ZiconOutline.up_1), label: "More")
                     ],
-                    currentIndex: getRouteIndex(routeController.route),
-                    onTap: (index) async {
+                    selectedIndex: getRouteIndex(routeController.route),
+                    onDestinationSelected: (index) async {
                       switch (index) {
                         case 0: //: explore page
                           if (routeController.route != RoutePages.explorePage) {
@@ -115,6 +111,27 @@ class MainLayout extends HookWidget {
                           if (routeController.route != RoutePages.trashPage) {
                             routeController.setRoute(RoutePages.trashPage);
                           }
+
+                          break;
+
+                        case 3:
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (context) => Container(
+                              margin: const EdgeInsets.only(top: 20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  ListTile(
+                                    title: const Text("Settings"),
+                                    leading:
+                                        const Icon(ZiconOutline.settings_1),
+                                    onTap: () {},
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
                       }
                     },
                   ),
