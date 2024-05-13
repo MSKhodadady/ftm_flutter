@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/controllers/route.dart';
+import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/pages/add_page.dart';
 import 'package:ftm_flutter/pages/explore_page.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
@@ -88,7 +92,23 @@ class MainLayout extends HookWidget {
                           if (routeController.route != RoutePages.addPage) {
                             selectedFilesController.clear();
 
-                            routeController.setRoute(RoutePages.selectFilePage);
+                            if (Platform.isWindows) {
+                              var result = await FilePicker.platform
+                                  .pickFiles(allowMultiple: true);
+
+                              if (result != null) {
+                                selectedFilesController.add(result.files
+                                    .where((element) => element.path != null)
+                                    .map((e) =>
+                                        FileTag(e.name, [], e.path ?? ""))
+                                    .toList());
+
+                                routeController.setRoute(RoutePages.addPage);
+                              }
+                            } else {
+                              routeController
+                                  .setRoute(RoutePages.selectFilePage);
+                            }
                           }
                           break;
                         case 2: //: trash page

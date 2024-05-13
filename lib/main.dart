@@ -14,6 +14,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isAndroid) {
+    //: TODO: device file info upgraded from 8 to 10,
+    //: check no error for new version in android
     var deviceInfo = DeviceInfoPlugin();
     var androidInfo = await deviceInfo.androidInfo;
 
@@ -43,6 +45,8 @@ void main() async {
       await windowManager.focus();
     });
 
+    await initFilesDir();
+  } else if (Platform.isWindows) {
     await initFilesDir();
   }
 

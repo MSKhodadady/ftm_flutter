@@ -7,11 +7,19 @@ String getLinuxHome() {
   return Platform.environment['HOME']!;
 }
 
+String getWindowsHomePath() {
+  return Platform.environment['UserProfile']!;
+}
+
 String filesPath() {
   if (Platform.isAndroid) {
     return '/storage/emulated/0/$mainFolderName';
-  } else {
+  } else if (Platform.isLinux) {
     return '${getLinuxHome()}/$mainFolderName';
+  } else if (Platform.isWindows) {
+    return p.join(getWindowsHomePath(), mainFolderName);
+  } else {
+    throw Error();
   }
 }
 
@@ -34,5 +42,7 @@ String homePath() {
       ? "/sdcard"
       : Platform.isLinux
           ? getLinuxHome()
-          : '';
+          : Platform.isWindows
+              ? getWindowsHomePath()
+              : '';
 }
