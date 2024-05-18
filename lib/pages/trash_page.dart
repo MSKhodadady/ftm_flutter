@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/database.dart';
 import 'package:ftm_flutter/hooks/loading.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
+import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/yes_no_dialog.dart';
 

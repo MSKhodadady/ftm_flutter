@@ -2,13 +2,10 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:ftm_flutter/database.dart';
-import 'package:ftm_flutter/files.dart';
+import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
-
-Directory getHomeDirectory() => Directory("/storage/emulated/0");
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,13 +18,13 @@ void main() async {
 
     if (androidInfo.version.sdkInt >= 30) {
       if (await Permission.manageExternalStorage.request().isGranted) {
-        await initFilesDir();
+        await initApp();
       } else {
         exit(0);
       }
     } else {
       if (await Permission.storage.request().isGranted) {
-        await initFilesDir();
+        await initApp();
       } else {
         exit(0);
       }
@@ -45,12 +42,10 @@ void main() async {
       await windowManager.focus();
     });
 
-    await initFilesDir();
+    await initApp();
   } else if (Platform.isWindows) {
-    await initFilesDir();
+    await initApp();
   }
-
-  await initDB();
 
   //: run app
   runApp(const MyApp());

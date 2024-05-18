@@ -5,8 +5,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/files.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
+import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/widget/file_leading.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
@@ -54,9 +54,11 @@ class SelectFile extends HookWidget {
         .listSync()
         .where((element) => !basename(element.path).startsWith('.'));
 
-    if (currentPath.value == homePath()) {
-      fl = fl.where((element) => basename(element.path) != mainFolderName);
-    }
+    // if (currentPath.value == homePath()) {
+    //   fl = fl.where((element) => basename(element.path) != mainFolderName);
+    // }
+
+    //: FIXME filter every path that contains a driver
 
     var filesList = fl.toList();
     filesList.sort(((a, b) => a.path.compareTo(b.path)));

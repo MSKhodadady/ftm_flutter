@@ -1,10 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:ftm_flutter/database.dart';
-import 'package:ftm_flutter/files.dart';
+import 'package:ftm_flutter/io_manager.dart';
 import 'package:path/path.dart';
-import 'package:sqlite3/sqlite3.dart';
 import 'package:tuple/tuple.dart';
 
 class FileTag {
@@ -50,7 +48,7 @@ Future<void> insertAndMove_(
   //: move or copy file
   var f = File(ft.path);
   // TODO copy or move by config, move by default
-  await f.copy(join(filesPath(), ft.fileName));
+  await f.copy(join(getCurrntPath(), ft.fileName));
   await f.delete();
 
   insertDB_(ft);
@@ -58,8 +56,7 @@ Future<void> insertAndMove_(
 
 Future<void> insertDB_(FileTag ft) async {
   await Future(() {
-    final db = sqlite3.open(getDBPath());
-    db.execute(
+    getCurrentDb().execute(
         "INSERT INTO $fileTagTable ($fileNameColumn, $tagsColumn) VALUES ('${ft.fileName}', json('${json.encode(ft.tags)}'));");
   });
 }
@@ -71,7 +68,7 @@ Future<List<FileTag>> getFilesList({
   List<String> excludeTags = const [],
 }) async {
   List<FileTag> computation() {
-    final db = getDB_();
+    final db = getCurrentDb();
 
     final conditionList = [
       ...includeTags.map((tag) =>
@@ -94,7 +91,7 @@ Future<List<FileTag>> getFilesList({
             List<String>.from(
               json.decode(e[tagsColumn]),
             ).where((element) => element != trashTag).toList(),
-            join(filesPath(), e[fileNameColumn]),
+            join(getCurrntPath(), e[fileNameColumn]),
           ),
         )
         .toList();
@@ -103,8 +100,7 @@ Future<List<FileTag>> getFilesList({
   return await Future(computation);
 }
 
-Future<Set<String>> tagsList_() => Future(() => Set.from(sqlite3
-    .open(getDBPath())
+Future<Set<String>> tagsList_() => Future(() => Set.from(getCurrentDb()
     .select("SELECT $tagsColumn FROM $fileTagTable;")
     .map((e) => List<String>.from(jsonDecode(e[tagsColumn])))
     .fold<List<String>>(
@@ -113,13 +109,13 @@ Future<Set<String>> tagsList_() => Future(() => Set.from(sqlite3
 //: ----------------------------------------------------------------------------
 
 bool checkFileExist(String fileName) {
-  final fileExists = File(join(filesPath(), fileName)).existsSync();
+  final fileExists = File(join(getCurrntPath(), fileName)).existsSync();
 
   return fileDbExists_(fileName) && fileExists;
 }
 
 bool fileDbExists_(String fileName) {
-  final db = getDB_();
+  final db = getCurrentDb();
 
   final dbExists = db
       .select("SELECT * FROM $fileTagTable WHERE $fileNameColumn = '$fileName'")
@@ -160,7 +156,7 @@ Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
       var f = File(oldFT.path);
       await f.rename(newFT.path);
 
-      final db = getDB_();
+      final db = getCurrentDb();
 
       await Future(
         () {
@@ -180,7 +176,7 @@ Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
 }
 
 Future<void> changeFileTags(FileTag ft, List<String> tags) async {
-  final db = getDB_();
+  final db = getCurrentDb();
 
   await Future(
     () {
@@ -196,12 +192,12 @@ Future<void> changeFileTags(FileTag ft, List<String> tags) async {
 //: ----------------------------------------------------------------------------
 
 void deleteFile(FileTag fileTag) {
-  final db = getDB_();
+  final db = getCurrentDb();
 
   db.execute(
       "DELETE FROM $fileTagTable WHERE $fileNameColumn = '${fileTag.fileName}';");
 
-  final file = File(join(filesPath(), fileTag.fileName));
+  final file = File(join(getCurrntPath(), fileTag.fileName));
   try {
     file.deleteSync();
   } on FileSystemException {
@@ -223,7 +219,7 @@ Future<IntegrityRes> checkIntegrity() async {
   }
 
   //: check all files in db
-  final filesDir = Directory(filesPath());
+  final filesDir = Directory(getCurrntPath());
 
   final files = (await filesDir.list().toList()).whereType<File>();
 
@@ -236,7 +232,7 @@ Future<IntegrityRes> checkIntegrity() async {
   }
 
   //: check all db items exist
-  final dbFiles = getDB_()
+  final dbFiles = getCurrentDb()
       .select("SELECT $fileNameColumn FROM $fileTagTable;")
       .map<String>((e) => e[fileNameColumn]);
 
@@ -244,7 +240,8 @@ Future<IntegrityRes> checkIntegrity() async {
       dbFiles.where((dbFile) => !files.any((e) => getFileName(e) == dbFile));
 
   for (var e in dbItemsToBeRemoved) {
-    getDB_().execute("DELETE FROM $fileTagTable WHERE $fileNameColumn = '$e';");
+    getCurrentDb()
+        .execute("DELETE FROM $fileTagTable WHERE $fileNameColumn = '$e';");
   }
 
   return IntegrityRes(
