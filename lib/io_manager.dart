@@ -6,18 +6,18 @@ import 'package:sqlite3/sqlite3.dart';
 
 //: DB -------------------------------------------------------------------------
 
-Future<Database> _initDB(String confPath) async {
-  final _dbPath = p.join(confPath, 'ftm.db');
+const databaseFileName = 'ftm.db';
 
-  final _db = sqlite3.open(_dbPath);
+Future<Database> _initDB(String confPath) async {
+  final db = sqlite3.open(p.join(confPath, databaseFileName));
 
   final dbVersion =
-      _db.select("PRAGMA user_version").first['user_version'] as int;
+      db.select("PRAGMA user_version").first['user_version'] as int;
   if (kDebugMode) print("current database version is: $dbVersion");
 
   //: migration 1
   if (dbVersion < 1) {
-    _db.execute('CREATE TABLE fileTag (fileName TEXT PRIMARY KEY, tags JSON)');
+    db.execute('CREATE TABLE fileTag (fileName TEXT PRIMARY KEY, tags JSON)');
   }
 
   //: IMPORTANT {
@@ -26,16 +26,16 @@ Future<Database> _initDB(String confPath) async {
 
   //: set migration version to last one
   if (dbVersion != lastDbVersion) {
-    _db.execute("PRAGMA user_version = $lastDbVersion");
+    db.execute("PRAGMA user_version = $lastDbVersion");
 
     final myLastDbVersion =
-        _db.select("PRAGMA user_version").first['user_version'] as int;
+        db.select("PRAGMA user_version").first['user_version'] as int;
     if (kDebugMode) print("The last db version is: $myLastDbVersion");
   }
 
-  _registerDBFunctions(_db);
+  _registerDBFunctions(db);
 
-  return _db;
+  return db;
 }
 
 void _registerDBFunctions(Database db) {
@@ -84,10 +84,11 @@ class Driver {
   }
 }
 
-const mainDriverName = 'FTM';
-const desktopAppConfDir = '.ftm'; //: for windows, linux, mac os
-const mainConfFileName = 'app-conf.json';
-const mainConfDriversKey = 'drivers';
+const _mainDriverName = 'FTM';
+const _desktopAppConfDir = '.ftm'; //: for windows, linux, mac os
+const _mainConfFileName = 'app-conf.json';
+const _mainConfDriversKey = 'drivers';
+const _driverConfDir = '.config';
 
 bool isDesktop() => Platform.isLinux || Platform.isWindows || Platform.isLinux;
 
@@ -100,25 +101,25 @@ Future<void> initApp() async {
   if (isDesktop()) {
     final home = homePath();
 
-    final appConfDir = Directory(p.join(home, desktopAppConfDir));
+    final appConfDir = Directory(p.join(home, _desktopAppConfDir));
 
     if (!(await appConfDir.exists())) {
       await appConfDir.create(recursive: true);
     }
 
-    final mainAppConfFile = File(p.join(appConfDir.path, mainConfFileName));
+    final mainAppConfFile = File(p.join(appConfDir.path, _mainConfFileName));
 
     _drivers = await () async {
       List<Driver> init() {
         final mainDriver = Driver(
-            name: mainDriverName,
-            path: p.join(home, mainDriverName),
+            name: _mainDriverName,
+            path: p.join(home, _mainDriverName),
             type: 'file',
             current: true);
 
         mainAppConfFile.writeAsString(
           jsonEncode({
-            mainConfDriversKey: [mainDriver.toMap()]
+            _mainConfDriversKey: [mainDriver.toMap()]
           }),
         );
 
@@ -133,7 +134,7 @@ Future<void> initApp() async {
               jsonDecode(await mainAppConfFile.readAsString());
 
           List<Map<String, dynamic>>? driversMaps =
-              mainAppConfJson[mainConfDriversKey];
+              mainAppConfJson[_mainConfDriversKey];
 
           if (driversMaps == null) {
             throw Exception();
@@ -152,7 +153,7 @@ Future<void> initApp() async {
     //: init conf dir and db for current driver
     final currentDriver = _drivers.firstWhere((element) => element.current);
 
-    final dir = Directory(p.join(currentDriver.path, desktopAppConfDir));
+    final dir = Directory(p.join(currentDriver.path, _driverConfDir));
     if (!(await dir.exists())) {
       await dir.create(recursive: true);
     }
