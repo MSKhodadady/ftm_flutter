@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
@@ -37,7 +36,8 @@ class SelectFile extends HookWidget {
 
     SelectedFilesController.to.add(status.notExists.toList());
 
-    RouteController.to.setRoute(RoutePages.addPage);
+    // ignore: use_build_context_synchronously
+    Navigator.pushNamed(context, '/add');
   }
 
   @override
@@ -96,7 +96,7 @@ class SelectFile extends HookWidget {
         leading: IconButton(
           icon: const Icon(ZiconOutline.back_1),
           onPressed: () {
-            RouteController.to.setRoute(RoutePages.explorePage);
+            Navigator.pushNamed(context, '/explore');
           },
         ),
       ),

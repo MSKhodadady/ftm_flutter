@@ -4,6 +4,11 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
+import 'package:ftm_flutter/pages/add_page.dart';
+import 'package:ftm_flutter/pages/drivers_page.dart';
+import 'package:ftm_flutter/pages/explore_page.dart';
+import 'package:ftm_flutter/pages/select_file.dart';
+import 'package:ftm_flutter/pages/trash_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -65,7 +70,68 @@ class MyApp extends StatelessWidget with WindowListener {
               secondary: Colors.amber,
               onSecondary: Colors.black,
               primaryContainer: Colors.pink.shade900)),
-      home: const MainLayout(),
+      initialRoute: '/explore',
+      onGenerateRoute: (settings) {
+        final currentPath = Uri.parse(settings.name!).path;
+
+        final routesWithMainLayout = {
+          '/explore': {
+            'index': 0,
+            'widget': const ExplorePage(),
+          },
+          '/add': {
+            'index': 1,
+            'widget': const AddPage(),
+          },
+          '/trash': {
+            'index': 2,
+            'widget': const TrashPage(),
+          },
+          '/drivers': {
+            'index': 3,
+            'widget': const DriversPage(),
+          }
+        };
+
+        if (routesWithMainLayout.keys
+            .toList()
+            .any((element) => element == currentPath)) {
+          return NoAnimationMaterialPageRoute(
+            builder: (context) => MainLayoutWrapper(
+              selectedIndex: routesWithMainLayout[currentPath]!['index'] as int,
+              child: routesWithMainLayout[currentPath]!['widget'] as Widget,
+            ),
+          );
+        }
+
+        if (currentPath == '/select-files') {
+          return MaterialPageRoute(
+            builder: (context) => const SelectFile(),
+          );
+        }
+
+        return MaterialPageRoute(
+          builder: (context) => Container(),
+        );
+      },
     );
+  }
+}
+
+class NoAnimationMaterialPageRoute<T> extends MaterialPageRoute<T> {
+  NoAnimationMaterialPageRoute({
+    required WidgetBuilder builder,
+    RouteSettings? settings,
+    super.maintainState = true,
+    super.fullscreenDialog = false,
+  }) : super(
+          builder: builder,
+          settings: settings,
+        );
+
+  @override
+  Widget buildTransitions(BuildContext context, Animation<double> animation,
+      Animation<double> secondaryAnimation, Widget child) {
+    return child;
   }
 }

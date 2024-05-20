@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/controllers/route.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
@@ -17,21 +16,22 @@ class AddPage extends HookWidget {
   Widget build(BuildContext context) {
     final chosenTags = useState<List<String>>([]);
 
+    final mounted = useIsMounted();
+
     return GetBuilder<SelectedFilesController>(
       builder: (selectedFilesController) => Scaffold(
-        floatingActionButton: GetBuilder<RouteController>(
-          builder: (routeController) => FloatingActionButton(
-              //: done selecting
-              onPressed: () async {
-                await Future.wait(selectedFilesController.selectedFiles
-                    .map((e) => FileTag(e.fileName,
-                        {...e.tags, ...chosenTags.value}.toList(), e.path))
-                    .map((e) => insertAndMove_(e)));
+        floatingActionButton: FloatingActionButton(
+            //: done selecting
+            onPressed: () async {
+              await Future.wait(selectedFilesController.selectedFiles
+                  .map((e) => FileTag(e.fileName,
+                      {...e.tags, ...chosenTags.value}.toList(), e.path))
+                  .map((e) => insertAndMove_(e)));
 
-                routeController.setRoute(RoutePages.explorePage);
-              },
-              child: const Icon(Icons.add)),
-        ),
+              if (!mounted()) return;
+              Navigator.pushNamed(context, '/explore');
+            },
+            child: const Icon(Icons.add)),
         body: Container(
           margin: const EdgeInsets.only(bottom: 100),
           child: ListView(
@@ -97,7 +97,7 @@ class AddPage extends HookWidget {
                       side: MaterialStateProperty.all(BorderSide(
                           color: Theme.of(context).colorScheme.secondary))),
                   onPressed: () {
-                    RouteController.to.setRoute(RoutePages.selectFilePage);
+                    Navigator.pushNamed(context, '/select-files');
                   },
                   child: Text(
                     "Add more Files ...",
