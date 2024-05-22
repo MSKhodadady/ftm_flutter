@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
+import 'package:tuple/tuple.dart';
 
 //: DB -------------------------------------------------------------------------
 
@@ -183,4 +185,118 @@ String homePath() {
           : Platform.isWindows
               ? Platform.environment['UserProfile']!
               : '';
+}
+
+String _getMainConfPath() {
+  if (isDesktop()) {
+    return p.join(homePath(), _desktopAppConfDir, _mainConfFileName);
+  } else {
+    throw Exception("not implemented");
+  }
+}
+
+Future<void> _writeMainConf(List<Driver> ds) async {
+  final mainConfFile = File(_getMainConfPath());
+
+  if (!(await mainConfFile.parent.exists())) {
+    await mainConfFile.parent.create(recursive: true);
+  }
+
+  await mainConfFile.writeAsString(
+    jsonEncode({_mainConfDriversKey: ds.map((e) => e.toMap())}),
+  );
+
+  _drivers = ds;
+}
+
+List<Driver> getDrivers() {
+  return _drivers;
+}
+
+class DriverExistsException implements Exception {}
+
+class DriverNotExistsException implements Exception {}
+
+Future<void> addDriver(Driver newDriver) async {
+  final drivers = getDrivers();
+
+  if (drivers.any((element) =>
+      element.name == newDriver.name || element.path == newDriver.path)) {
+    throw DriverExistsException();
+  }
+
+  final newDrivers = [...drivers, newDriver];
+
+  await _writeMainConf(newDrivers);
+}
+
+Tuple2<List<Driver>, Driver> _getDriverOrThrow(String driverName) {
+  final drivers = getDrivers();
+
+  final targetD =
+      drivers.firstWhereOrNull((element) => element.name == driverName);
+
+  if (targetD == null) {
+    throw DriverNotExistsException();
+  }
+
+  return Tuple2(drivers, targetD);
+}
+
+Future<void> renameDriver(String driverName, String newName) async {
+  final k = _getDriverOrThrow(driverName);
+  final drivers = k.item1;
+
+  final neoDs = drivers
+      .map(
+        (e) => e.name == driverName
+            ? Driver(
+                name: newName, path: e.path, type: e.type, current: e.current)
+            : e,
+      )
+      .toList();
+
+  await _writeMainConf(neoDs);
+}
+
+Future<void> setCurrentDriver(String driverName) async {
+  final k = _getDriverOrThrow(driverName);
+  final drivers = k.item1;
+  final d = k.item2;
+
+  final neoDs = drivers
+      .map(
+        (e) => e.name == driverName
+            ? Driver(name: e.name, path: e.path, type: e.type, current: true)
+            : e,
+      )
+      .toList();
+
+  await _writeMainConf(neoDs);
+
+  //: set current db
+  final dir = Directory(p.join(d.path, _driverConfDir));
+  if (!(await dir.exists())) {
+    await dir.create(recursive: true);
+  }
+
+  _currentDb = await _initDB(dir.path);
+}
+
+Future<void> removeDriver(String driverName) async {
+  final k = _getDriverOrThrow(driverName);
+  final drivers = k.item1;
+  final d = k.item2;
+
+  if (drivers.length < 2) {
+    throw Exception("one-driver");
+  }
+
+  if (d.current) {
+    throw Exception("current");
+  }
+
+  var neoDs = drivers.where((element) => element.name != driverName).toList();
+
+  _writeMainConf(neoDs);
 }
