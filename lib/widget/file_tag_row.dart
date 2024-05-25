@@ -6,7 +6,6 @@ class FileTagRow extends StatelessWidget {
   const FileTagRow({
     super.key,
     required this.ft,
-    required this.filePath,
     this.onTagClick,
     this.isSelected,
     this.onSelect,
@@ -14,7 +13,6 @@ class FileTagRow extends StatelessWidget {
   });
 
   final FileTag ft;
-  final String filePath;
   final bool? isSelected;
   final void Function(bool? isAdded)? onSelect;
   final void Function(String tag)? onTagClick;
@@ -34,7 +32,7 @@ class FileTagRow extends StatelessWidget {
                     }
                   },
                   child: FileLeading(
-                    filePath: filePath,
+                    filePath: ft.path,
                   ),
                 )
               : Checkbox(

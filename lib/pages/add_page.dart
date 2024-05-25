@@ -59,7 +59,6 @@ class AddPage extends HookWidget {
                 children: selectedFilesController.selectedFiles
                     .map((e) => FileTagRow(
                           ft: e,
-                          filePath: e.path,
                           onTagClick: (s) {},
                           actions: [
                             IconButton(

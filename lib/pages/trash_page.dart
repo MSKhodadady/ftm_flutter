@@ -91,7 +91,6 @@ class TrashPage extends HookWidget {
                 children: fileTagsFuture.data!
                     .map((e) => FileTagRow(
                           ft: e,
-                          filePath: e.path,
                           isSelected: selectedFiles.value.isEmpty
                               ? null
                               : selectedFiles.value.contains(e),

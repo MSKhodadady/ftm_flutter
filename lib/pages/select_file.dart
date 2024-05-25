@@ -43,7 +43,7 @@ class SelectFile extends HookWidget {
   @override
   Widget build(BuildContext context) {
     //: state
-    final currentPath = useState(homePath());
+    final currentPath = useState(getHomePath());
     final multipleSelect = useState(false);
     final selectedFilesPath = useState<List<String>>([]);
 
@@ -199,7 +199,7 @@ class SelectFile extends HookWidget {
         ),
       ];
     }
-    if (!(multipleSelect.value || currentPath.value == homePath())) {
+    if (!(multipleSelect.value || currentPath.value == getHomePath())) {
       res = [
         ...res,
         TextButton(

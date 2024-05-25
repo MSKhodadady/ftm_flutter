@@ -8,7 +8,6 @@ import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:ftm_flutter/widget/yes_no_dialog.dart';
-import 'package:path/path.dart';
 
 bool integrityChecked = false;
 
@@ -199,10 +198,6 @@ class ExplorePage extends HookWidget {
                     children: (fileTagsFuture.data as Iterable<FileTag>)
                         .map((e) => FileTagRow(
                               ft: e,
-                              filePath: join(
-                                getCurrntPath(),
-                                e.fileName,
-                              ),
                               onTagClick: (tag) {
                                 chosenTags.value = [...chosenTags.value, tag];
                               },

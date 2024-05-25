@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:get/get.dart';
+import '../io_manager.dart';
 
 class MainLayoutWrapper extends StatelessWidget {
   const MainLayoutWrapper(
@@ -52,7 +51,7 @@ class MainLayoutWrapper extends StatelessWidget {
                 case 1: //: add page
                   selectedFilesController.clear();
 
-                  if (Platform.isWindows) {
+                  if (isDesktop()) {
                     var result = await FilePicker.platform
                         .pickFiles(allowMultiple: true);
 
