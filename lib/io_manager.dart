@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 //: DB -------------------------------------------------------------------------
@@ -92,8 +93,12 @@ const _driverConfDir = '.config';
 
 bool isDesktop() => Platform.isLinux || Platform.isWindows || Platform.isLinux;
 
+// APP IO STATE ----------------------------------------------------------------
+
 Database? _currentDb;
 var _mainConf = MainConf([], '');
+
+// -----------------------------------------------------------------------------
 
 class MainConf {
   static const _mainConfDriversKey = 'drivers';
@@ -190,17 +195,23 @@ String getHomePath() {
               : '';
 }
 
-String _getMainConfPath() {
+Future<String> _getMainConfPath() async {
   if (isDesktop()) {
     return p.join(getHomePath(), _desktopAppConfDir, _mainConfFileName);
   } else {
-    throw Exception("not implemented"); //: TODO
+    final supportDir = await getApplicationSupportDirectory();
+    return p.join(
+      supportDir.path,
+      _mainConfFileName,
+    );
   }
 }
 
-Future<MainConf> _withMainConf(String? driverName,
-    FutureOr<MainConf> Function(MainConf m, Driver? d) callback) async {
-  final mainConfFile = File(_getMainConfPath());
+Future<MainConf> _withMainConf(
+  String? driverName,
+  FutureOr<MainConf> Function(MainConf m, Driver? d) callback,
+) async {
+  final mainConfFile = File(await _getMainConfPath());
 
   //: ensure
   if (!(await mainConfFile.exists())) {
@@ -211,18 +222,18 @@ Future<MainConf> _withMainConf(String? driverName,
     _mainConf = _mainConfFromJsonString(await mainConfFile.readAsString());
   }
 
-  if (driverName == null) {
-    _mainConf = await callback(_mainConf, null);
-  } else {
-    final targetD = _mainConf.drivers
+  _mainConf = await callback(_mainConf, () {
+    if (driverName == null) return null;
+
+    final _td = _mainConf.drivers
         .firstWhereOrNull((element) => element.name == driverName);
 
-    if (targetD == null) {
+    if (_td == null) {
       throw DriverNotExistsException();
     }
 
-    _mainConf = await callback(_mainConf, targetD);
-  }
+    return _td;
+  }());
 
   await mainConfFile.writeAsString(jsonEncode(_mainConf.toMap()));
 
