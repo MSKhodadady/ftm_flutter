@@ -57,7 +57,8 @@ Future<void> insertAndMove_(
 Future<void> insertDB_(FileTag ft) async {
   await Future(() {
     getCurrentDb().execute(
-        "INSERT INTO $fileTagTable ($fileNameColumn, $tagsColumn) VALUES ('${ft.fileName}', json('${json.encode(ft.tags)}'));");
+        "INSERT INTO $fileTagTable ($fileNameColumn, $tagsColumn) VALUES (?1, json(?2));",
+        [ft.fileName, json.encode(ft.tags)]);
   });
 }
 
@@ -117,9 +118,9 @@ bool checkFileExist(String fileName) {
 bool fileDbExists_(String fileName) {
   final db = getCurrentDb();
 
-  final dbExists = db
-      .select("SELECT * FROM $fileTagTable WHERE $fileNameColumn = '$fileName'")
-      .isNotEmpty;
+  final dbExists = db.select(
+      "SELECT * FROM $fileTagTable WHERE $fileNameColumn = ?1",
+      [fileName]).isNotEmpty;
   return dbExists;
 }
 
