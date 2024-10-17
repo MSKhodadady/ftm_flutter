@@ -72,8 +72,37 @@ class DriversPage extends HookWidget {
                             ),
                           MenuItemButton(
                             leadingIcon: const Icon(ZiconOutline.pen),
-                            child: const Text("chnage name"),
-                            onPressed: () {},
+                            child: const Text("change name"),
+                            onPressed: () {
+                              // renameDriver(e.name, newName)
+
+                              showDialog(
+                                context: context,
+                                builder: (context) => RenameDriver(
+                                  oldName: e.name,
+                                  onRename: (newName) {
+                                    if (e.name != newName) {
+                                      renameDriver(e.name, newName);
+
+                                      drivers.value = drivers.value
+                                          .map((j) => j.name == e.name
+                                              ? Driver(
+                                                  name: newName,
+                                                  path: j.path,
+                                                  type: j.type)
+                                              : j)
+                                          .toList();
+
+                                      currentDriver.value =
+                                          currentDriver.value == e.name
+                                              ? newName
+                                              : currentDriver.value;
+                                    }
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              );
+                            },
                           ),
                           MenuItemButton(
                             leadingIcon: const Icon(ZiconOutline.trash),
@@ -97,6 +126,58 @@ class DriversPage extends HookWidget {
   }
 }
 
+class RenameDriver extends HookWidget {
+  const RenameDriver({
+    required this.oldName,
+    required this.onRename,
+    super.key,
+  });
+
+  final String oldName;
+  final Function(String) onRename;
+
+  @override
+  Widget build(BuildContext context) {
+    final nameController = useTextEditingController();
+    final focusName = useFocusNode();
+
+    final nameError = useState<String?>(null);
+
+    useEffect(() {
+      focusName.requestFocus();
+
+      nameController.addListener(() {
+        nameError.value = null;
+      });
+    }, []);
+
+    return AlertDialog(
+      content: SizedBox(
+          width: 300,
+          // height: 100,
+          child: TextField(
+            decoration: InputDecoration(
+                border: const OutlineInputBorder(),
+                label: const Text("Enter new name"),
+                errorText: nameError.value),
+            controller: nameController,
+            focusNode: focusName,
+          )),
+      actions: [
+        TextButton(
+            onPressed: () {
+              final n = nameController.text;
+
+              if (n.isEmpty) return;
+
+              onRename(nameController.text);
+            },
+            child: const Text("rename"))
+      ],
+    );
+  }
+}
+
 class CreateDriver extends HookWidget {
   const CreateDriver(
     this.drivers,
@@ -116,7 +197,7 @@ class CreateDriver extends HookWidget {
     final pathController = useTextEditingController();
     final focusController = useFocusNode();
 
-    final isMoutned = useIsMounted();
+    final isMounted = useIsMounted();
 
     useEffect(() {
       focusController.requestFocus();
@@ -182,7 +263,7 @@ class CreateDriver extends HookWidget {
       actions: [
         TextButton(
             onPressed: () async {
-              if (!isMoutned()) return;
+              if (!isMounted()) return;
 
               if (nameController.text.isEmpty) {
                 nameError.value = "name is empty!";

@@ -207,9 +207,13 @@ Future<String> _getMainConfPath() async {
   }
 }
 
+/// This function, gets [driverName] and a [transformer] function.
+/// First this functions loads the [MainConf] and gives it to [transformer] with the driver with name [driverName]/
+/// Then, the [transformer] changes the [MainConf], and returns new [MainConf].
+/// Then, this function saves the [MainConf] to file again.
 Future<MainConf> _withMainConf(
   String? driverName,
-  FutureOr<MainConf> Function(MainConf m, Driver? d) callback,
+  FutureOr<MainConf> Function(MainConf m, Driver? d) transformer,
 ) async {
   final mainConfFile = File(await _getMainConfPath());
 
@@ -221,19 +225,20 @@ Future<MainConf> _withMainConf(
   } else {
     _mainConf = _mainConfFromJsonString(await mainConfFile.readAsString());
   }
-
-  _mainConf = await callback(_mainConf, () {
+  final driver = () {
     if (driverName == null) return null;
 
-    final _td = _mainConf.drivers
+    final td = _mainConf.drivers
         .firstWhereOrNull((element) => element.name == driverName);
 
-    if (_td == null) {
+    if (td == null) {
       throw DriverNotExistsException();
     }
 
-    return _td;
-  }());
+    return td;
+  }();
+
+  _mainConf = await transformer(_mainConf, driver);
 
   await mainConfFile.writeAsString(jsonEncode(_mainConf.toMap()));
 
@@ -269,7 +274,8 @@ Future<void> renameDriver(String driverName, String newName) async {
         )
         .toList();
 
-    return MainConf(neoDs, m.currentDriver);
+    return MainConf(
+        neoDs, m.currentDriver == driverName ? newName : m.currentDriver);
   });
 }
 
