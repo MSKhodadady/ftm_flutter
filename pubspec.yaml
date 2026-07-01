@@ -36,19 +36,19 @@ dependencies:
   cupertino_icons: ^1.0.2
 
   path: ^1.8.1
-  path_provider:
-  permission_handler: ^10.0.0
-  sqlite3:
-  sqlite3_flutter_libs:
-  tuple:
-  flutter_launcher_icons: ^0.11.0
-  device_info_plus: ^10.1.0
+  path_provider: ^2.1.6
+  permission_handler: ^12.0.3
+  sqlite3: ^3.3.4
+  sqlite3_flutter_libs: ^0.6.0+eol
+  tuple: ^2.0.2
+  flutter_launcher_icons: ^0.14.4
+  device_info_plus: ^13.2.0
   open_file_plus: ^3.3.0
-  flutter_hooks: ^0.18.6
-  get:
-  mime: ^1.0.4
-  window_manager: ^0.3.7
-  file_picker: ^8.0.3
+  flutter_hooks: ^0.21.3+1
+  get: ^4.7.3
+  mime: ^2.0.0
+  window_manager: ^0.5.1
+  file_picker: ^12.0.0-beta.7
 
 dev_dependencies:
   flutter_test:
@@ -59,7 +59,7 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^2.0.0
+  flutter_lints: ^6.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

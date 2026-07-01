@@ -149,6 +149,8 @@ class RenameDriver extends HookWidget {
       nameController.addListener(() {
         nameError.value = null;
       });
+      
+      return null;
     }, []);
 
     return AlertDialog(
@@ -247,7 +249,7 @@ class CreateDriver extends HookWidget {
                     onPressed: () async {
                       if (isDesktop()) {
                         final result =
-                            await FilePicker.platform.getDirectoryPath();
+                            await FilePicker.getDirectoryPath();
 
                         if (result != null) {
                           pathController.text = result;

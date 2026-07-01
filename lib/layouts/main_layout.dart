@@ -52,8 +52,7 @@ class MainLayoutWrapper extends StatelessWidget {
                   selectedFilesController.clear();
 
                   if (isDesktop()) {
-                    var result = await FilePicker.platform
-                        .pickFiles(allowMultiple: true);
+                    var result = await FilePicker.pickFiles();
 
                     if (result != null) {
                       selectedFilesController.add(result.files
