@@ -11,7 +11,7 @@ class SecondaryButton extends StatelessWidget {
     return TextButton(
         onPressed: onPressed,
         style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(
+            backgroundColor: WidgetStateProperty.all(
                 Theme.of(context).colorScheme.secondary)),
         child: child);
   }

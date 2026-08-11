@@ -56,8 +56,10 @@ class ExplorePage extends HookWidget {
         }
 
         if (snackText != '') {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(snackText)));
+          if (context.mounted) {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(snackText)));
+          }
         }
 
         refresh();
@@ -175,7 +177,7 @@ class ExplorePage extends HookWidget {
                           padding: const EdgeInsets.only(left: 5),
                           child: Chip(
                             label: Text(e),
-                            color: MaterialStatePropertyAll(
+                            color: WidgetStatePropertyAll(
                                 Theme.of(context).colorScheme.secondary),
                             side: const BorderSide(color: Colors.transparent),
                             onDeleted: () {

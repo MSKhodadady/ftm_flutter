@@ -73,7 +73,7 @@ class SelectFile extends HookWidget {
       return previousValue;
     });
 
-    filesList = [...separated.item1.toList(), ...separated.item2.toList()];
+    filesList = [...separated.item1, ...separated.item2];
 
     //: functions
     void addToSelectedFiles(String path) {

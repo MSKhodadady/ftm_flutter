@@ -10,11 +10,10 @@ class TagAutocomplete extends StatefulWidget {
   final String? title;
 
   const TagAutocomplete(
-      {Key? key,
+      {super.key,
       required this.onSubmitted,
       required this.chosenTags,
-      this.title})
-      : super(key: key);
+      this.title});
 
   @override
   State<TagAutocomplete> createState() => _TagAutocompleteState();
@@ -88,7 +87,7 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
                                     padding: const EdgeInsets.only(right: 1),
                                     child: Chip(
                                       label: Text(e),
-                                      color: MaterialStatePropertyAll(
+                                      color: WidgetStatePropertyAll(
                                           Theme.of(context)
                                               .colorScheme
                                               .secondary),

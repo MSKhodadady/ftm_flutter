@@ -16,8 +16,6 @@ class AddPage extends HookWidget {
   Widget build(BuildContext context) {
     final chosenTags = useState<List<String>>([]);
 
-    final mounted = useIsMounted();
-
     return GetBuilder<SelectedFilesController>(
       builder: (selectedFilesController) => Scaffold(
         floatingActionButton: FloatingActionButton(
@@ -28,8 +26,9 @@ class AddPage extends HookWidget {
                       {...e.tags, ...chosenTags.value}.toList(), e.path))
                   .map((e) => insertAndMove_(e)));
 
-              if (!mounted()) return;
-              Navigator.pushNamed(context, '/explore');
+              if (context.mounted) {
+                Navigator.pushNamed(context, '/explore');
+              }
             },
             child: const Icon(Icons.add)),
         body: Container(
@@ -93,7 +92,7 @@ class AddPage extends HookWidget {
                 margin: const EdgeInsets.all(10),
                 child: OutlinedButton(
                   style: ButtonStyle(
-                      side: MaterialStateProperty.all(BorderSide(
+                      side: WidgetStateProperty.all(BorderSide(
                           color: Theme.of(context).colorScheme.secondary))),
                   onPressed: () {
                     Navigator.pushNamed(context, '/select-files');

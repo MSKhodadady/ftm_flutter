@@ -29,7 +29,7 @@ class TrashPage extends HookWidget {
       appBar: AppBar(
         title: const Text("Trash"),
         actions: [
-          ButtonBar(
+          OverflowBar(
             children: [
               TextButton(
                   onPressed: () async {

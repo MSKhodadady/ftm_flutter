@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 class ChosenTagList extends StatelessWidget {
   const ChosenTagList({
-    Key? key,
+    super.key,
     required this.chosenTags,
     required this.onDeleted,
-  }) : super(key: key);
+  });
 
   final List<String> chosenTags;
   final Function(String tag) onDeleted;
@@ -22,7 +22,7 @@ class ChosenTagList extends StatelessWidget {
                   onDeleted: () => onDeleted(e),
                   label: Text(e),
                   // backgroundColor: Colors.grey[100],
-                  color: MaterialStatePropertyAll(
+                  color: WidgetStatePropertyAll(
                       Theme.of(context).colorScheme.secondary),
                   side: const BorderSide(color: Colors.transparent),
                 ),

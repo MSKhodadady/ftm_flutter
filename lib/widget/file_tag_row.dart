@@ -54,7 +54,7 @@ class FileTagRow extends StatelessWidget {
                       child: Chip(
                         label: Text(t),
                         side: const BorderSide(color: Colors.transparent),
-                        color: MaterialStatePropertyAll(
+                        color: WidgetStatePropertyAll(
                             Theme.of(context).colorScheme.secondary),
                         visualDensity:
                             const VisualDensity(horizontal: -4, vertical: -4),

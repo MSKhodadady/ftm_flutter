@@ -10,8 +10,7 @@ import '../data/file_tag.dart';
 
 class EditFileTag extends StatefulWidget {
   const EditFileTag(
-      {Key? key, required this.oldFileTag, required this.isImport})
-      : super(key: key);
+      {super.key, required this.oldFileTag, required this.isImport});
 
   final FileTag oldFileTag;
   final bool isImport;
