@@ -57,4 +57,24 @@ class DriverDbService {
           [ft.fileName, json.encode(ft.tags)]);
     });
   }
+
+  Iterable<String> getAllItems(Database db) {
+    final dbFiles = db
+        .select("SELECT $fileNameColumn FROM $fileTagTable;")
+        .map<String>((e) => e[fileNameColumn]);
+
+    return dbFiles;
+  }
+
+  void deleteFileTag(String fileName, Database db) {
+    db.execute(
+        "DELETE FROM $fileTagTable WHERE $fileNameColumn = '$fileName';");
+  }
+
+  ResultSet findByFileName(String fileName, Database db) {
+    final result = db.select(
+        "SELECT * FROM $fileTagTable WHERE $fileNameColumn = ?1;", [fileName]);
+
+    return result;
+  }
 }

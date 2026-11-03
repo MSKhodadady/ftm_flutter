@@ -7,13 +7,14 @@ import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 
 const _mainDbFileName = 'ftm.db';
+const _mainDbFolder = 'data';
 
 class Driver {
   final String name;
   final String path;
   final String type;
 
-  Driver._raw({
+  Driver.raw({
     required this.name,
     required this.path,
     required this.type,
@@ -25,7 +26,7 @@ class Driver {
 
     assert(correct, 'driver map is not correct');
 
-    return Driver._raw(
+    return Driver.raw(
       name: name,
       path: path,
       type: type,
@@ -41,6 +42,22 @@ class Driver {
   }
 }
 
+class DriverSyncResult {
+  final AppConf appConf;
+  final Driver currentDriver;
+  final Iterable<String> dbItemsToBeRemoved;
+  final Iterable<File> filesToBeAddedToDb;
+  final Database db;
+
+  DriverSyncResult({
+    required this.currentDriver,
+    required this.db,
+    required this.dbItemsToBeRemoved,
+    required this.filesToBeAddedToDb,
+    required this.appConf,
+  });
+}
+
 class DriverRepo {
   DriverService driverService;
   AppConfService appConfService;
@@ -52,9 +69,9 @@ class DriverRepo {
     this.dbService,
   );
 
-  Future<Driver> getCurrentDriver() async {
+  Future<DriverSyncResult> getCurrentDriver() async {
     //: read config from appConfService and initialize drivers
-    final mc = await appConfService.readAppConf();
+    AppConf mc = await appConfService.readAppConf();
 
     //: init current driver from driverService
     final cd = mc.drivers.firstWhereOrNull((e) => e.name == mc.currentDriver);
@@ -62,10 +79,24 @@ class DriverRepo {
         'current driver must not be null and must be in the drivers list');
     Driver currentDriver = cd!;
 
-    final res = await driverService.checkDriverDirExists(currentDriver);
+    final dir = Directory(currentDriver.path);
 
-    if (!res) {
-      //: FIXME:
+    if (!dir.existsSync()) {
+      try {
+        //: try to create the directory if it does not exist
+        await dir.create(recursive: true);
+      } catch (e) {
+        throw CannotCreateDriverDirException(
+          innerException: e,
+          driver: currentDriver,
+          message: 'Cannot create driver directory: ${currentDriver.path}',
+        );
+      }
+    }
+
+    final dataDir = Directory(p.join(currentDriver.path, _mainDbFolder));
+    if (!dataDir.existsSync()) {
+      await dataDir.create(recursive: true);
     }
 
     final dbPath = p.join(currentDriver.path, _mainDbFileName);
@@ -80,38 +111,37 @@ class DriverRepo {
     final filesToBeAddedToDb =
         await checkSyncFilesToDb(currentDriver, currentDriverDB);
 
-    return currentDriver;
+    return DriverSyncResult(
+      currentDriver: currentDriver,
+      db: currentDriverDB,
+      dbItemsToBeRemoved: dbItemsToBeRemoved,
+      filesToBeAddedToDb: filesToBeAddedToDb,
+      appConf: mc,
+    );
   }
 
   Future<Iterable<String>> checkSyncDbToFiles(Driver driver, Database db) {
-    final filesDir = Directory(driver.path);
-
-    final files = filesDir.listSync().whereType<File>();
-
-    final dbFiles = db
-        .select("SELECT $fileNameColumn FROM $fileTagTable;")
-        .map<String>((e) => e[fileNameColumn]);
+    // TODO: futurize it!
+    final files = driverService.getAllFiles(driver);
+    final dbFiles = dbService.getAllItems(db);
 
     final dbItemsToBeRemoved = dbFiles
         .where((dbFile) => !files.any((e) => p.basename(e.path) == dbFile));
 
     for (var e in dbItemsToBeRemoved) {
-      db.execute("DELETE FROM $fileTagTable WHERE $fileNameColumn = '$e';");
+      dbService.deleteFileTag(e, db);
     }
 
     return Future.value(dbItemsToBeRemoved);
   }
 
   Future<Iterable<File>> checkSyncFilesToDb(Driver driver, Database db) {
-    final filesDir = Directory(driver.path);
-
-    final files = filesDir.listSync().whereType<File>();
+    // TODO: futurize it!
+    final files = driverService.getAllFiles(driver);
 
     bool checkNotExists(File file) {
       final fileName = p.basename(file.path);
-      final exists = db.select(
-          "SELECT $fileNameColumn FROM $fileTagTable WHERE $fileNameColumn = ?1;",
-          [fileName]);
+      final exists = dbService.findByFileName(fileName, db);
 
       return exists.isEmpty;
     }
@@ -128,8 +158,23 @@ class DriverRepo {
 }
 
 class DriverService {
-  Future<bool> checkDriverDirExists(Driver driver) async {
-    final dir = Directory(driver.path);
-    return dir.exists();
+  Iterable<File> getAllFiles(Driver driver) {
+    final filesDir = Directory(driver.path);
+    final files = filesDir.listSync().whereType<File>();
+    return files;
   }
+}
+
+class CannotCreateDriverDirException implements Exception {
+  final String message;
+  final Driver driver;
+  final Object innerException;
+  CannotCreateDriverDirException(
+      {required this.driver,
+      required this.message,
+      required this.innerException});
+
+  @override
+  String toString() =>
+      'CannotCreateDriverDirException: $message - Driver: ${driver.name} at ${driver.path}';
 }
