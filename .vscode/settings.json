@@ -7,6 +7,5 @@
     "sqflite",
     "typeahead",
     "Zicon"
-  ],
-  "cmake.sourceDirectory": "/home/shockwave/Projects/FTM/ftm_flutter/linux"
+  ]
 }

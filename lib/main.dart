@@ -56,7 +56,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget with WindowListener {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -119,14 +119,11 @@ class MyApp extends StatelessWidget with WindowListener {
 
 class NoAnimationMaterialPageRoute<T> extends MaterialPageRoute<T> {
   NoAnimationMaterialPageRoute({
-    required WidgetBuilder builder,
-    RouteSettings? settings,
+    required super.builder,
+    super.settings,
     super.maintainState = true,
     super.fullscreenDialog = false,
-  }) : super(
-          builder: builder,
-          settings: settings,
-        );
+  });
 
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation,

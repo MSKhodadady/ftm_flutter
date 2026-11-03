@@ -1,0 +1,96 @@
+➜  ftm_flutter git:(main) ✗ proxychains flutter pub upgrade --major-versions
+(46.0s)
+Changed 8 constraints in pubspec.yaml:
+  permission_handler: ^10.0.0 -> ^12.0.3
+  flutter_launcher_icons: ^0.11.0 -> ^0.14.4
+  device_info_plus: ^10.1.0 -> ^13.2.0
+  flutter_hooks: ^0.18.6 -> ^0.21.3+1
+  mime: ^1.0.4 -> ^2.0.0
+  window_manager: ^0.3.7 -> ^0.5.1
+  file_picker: ^8.0.3 -> ^12.0.0-beta.7
+  flutter_lints: ^2.0.0 -> ^6.0.0
+Resolving dependencies... 
+(38.4s)
+> archive 4.0.9 (was 3.4.10)
+> args 2.7.0 (was 2.4.2)
+> async 2.13.1 (was 2.11.0)
+> boolean_selector 2.1.2 (was 2.1.1)
+> checked_yaml 2.0.4 (was 2.0.3)
+> cli_util 0.4.2 (was 0.3.5) (0.5.1 available)
++ code_assets 1.2.1
+> cross_file 0.3.5+4 (was 0.3.4+1)
+> crypto 3.0.7 (was 3.0.3)
+> cupertino_icons 1.0.9 (was 1.0.6)
++ dbus 0.7.14
+> device_info_plus 13.2.0 (was 10.1.0)
+> device_info_plus_platform_interface 8.1.0 (was 7.0.0)
+> ffi 2.2.0 (was 2.1.0)
++ ffi_leak_tracker 0.1.2
+> file 7.0.1 (was 7.0.0)
+> file_picker 12.0.0-beta.7 (was 8.0.3)
+> flutter_hooks 0.21.3+1 (was 0.18.6)
+> flutter_launcher_icons 0.14.4 (was 0.11.0)
+> flutter_lints 6.0.0 (was 2.0.3)
+> flutter_plugin_android_lifecycle 2.0.35 (was 2.0.19)
+> get 4.7.3 (was 4.6.6)
++ glob 2.1.3
++ hooks 2.0.2
+> image 4.8.0 (was 3.3.0) (4.9.1 available)
++ jni 1.0.0
++ jni_flutter 1.0.1
+> json_annotation 4.12.0 (was 4.8.1)
+> lints 6.1.0 (was 2.1.1)
++ logging 1.3.0
+  matcher 0.12.19 (0.12.20 available)
+  meta 1.18.0 (1.18.3 available)
+> mime 2.0.0 (was 1.0.5)
++ native_toolchain_c 0.19.2
++ objective_c 9.4.1
+> open_file_plus 3.4.1+1 (was 3.4.1)
++ package_config 2.2.0 (3.0.0 available)
+> path_provider 2.1.6 (was 2.1.2)
+> path_provider_android 2.3.1 (was 2.2.2)
+> path_provider_foundation 2.6.0 (was 2.3.2)
+> path_provider_linux 2.2.2 (was 2.2.1)
+> path_provider_platform_interface 2.1.3 (was 2.1.2)
+> path_provider_windows 2.3.0 (was 2.2.1)
+> permission_handler 12.0.3 (was 10.4.5)
+> permission_handler_android 13.0.1 (was 10.3.6)
+> permission_handler_apple 9.4.10 (was 9.1.4)
++ permission_handler_html 0.1.3+5
+> permission_handler_platform_interface 4.3.0 (was 3.12.0)
+> permission_handler_windows 0.2.1 (was 0.1.3)
+> petitparser 7.0.2 (was 6.0.2)
+> platform 3.1.6 (was 3.1.4)
++ posix 6.5.0
++ pub_semver 2.2.0
++ record_use 0.6.0
+> screen_retriever 0.2.1 (was 0.1.9)
++ screen_retriever_linux 0.2.1
++ screen_retriever_macos 0.2.1
++ screen_retriever_platform_interface 0.2.1
++ screen_retriever_windows 0.2.1
+> source_span 1.10.2 (was 1.10.0)
+> sqlite3 3.3.4 (was 2.3.0)
+> sqlite3_flutter_libs 0.6.0+eol (was 0.5.19+1)
+> string_scanner 1.4.1 (was 1.2.0)
+> term_glyph 1.2.2 (was 1.2.1)
+  test_api 0.7.11 (0.7.13 available)
+> typed_data 1.4.0 (was 1.3.2)
+  vector_math 2.2.0 (2.4.0 available)
+> vm_service 15.2.0 (was 13.0.0)
+> web 1.1.1 (was 0.5.1)
+> win32 6.3.0 (was 5.2.0)
+> win32_registry 3.0.3 (was 1.1.2)
+> window_manager 0.5.1 (was 0.3.8)
+> xdg_directories 1.1.0 (was 1.0.4)
+> xml 6.6.1 (was 6.5.0) (7.0.1 available)
+> yaml 3.1.3 (was 3.1.2)
+These packages are no longer being depended on:
+- convert 3.1.1
+- js 0.6.7
+- pointycastle 3.7.4
+Changed 74 dependencies!
+8 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+➜  ftm_flutter git:(main) ✗ 
