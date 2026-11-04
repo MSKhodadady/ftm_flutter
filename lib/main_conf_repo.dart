@@ -55,7 +55,7 @@ class AppConf {
   }
 
   factory AppConf.appStarter() {
-    final mainDriver = Driver.raw(
+    final mainDriver = Driver(
       name: _mainDriverName,
       path: p.join(getHomePath(), _mainDriverName),
       type: 'file',

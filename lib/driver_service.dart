@@ -14,7 +14,7 @@ class Driver {
   final String path;
   final String type;
 
-  Driver.raw({
+  Driver({
     required this.name,
     required this.path,
     required this.type,
@@ -26,7 +26,7 @@ class Driver {
 
     assert(correct, 'driver map is not correct');
 
-    return Driver.raw(
+    return Driver(
       name: name,
       path: path,
       type: type,
@@ -42,16 +42,25 @@ class Driver {
   }
 }
 
+class DriverDatabase extends Driver {
+  final Database db;
+
+  DriverDatabase({
+    required super.name,
+    required super.path,
+    required super.type,
+    required this.db,
+  });
+}
+
 class DriverSyncResult {
   final AppConf appConf;
-  final Driver currentDriver;
+  final DriverDatabase currentDriver;
   final Iterable<String> dbItemsToBeRemoved;
   final Iterable<File> filesToBeAddedToDb;
-  final Database db;
 
   DriverSyncResult({
     required this.currentDriver,
-    required this.db,
     required this.dbItemsToBeRemoved,
     required this.filesToBeAddedToDb,
     required this.appConf,
@@ -112,8 +121,12 @@ class DriverRepo {
         await checkSyncFilesToDb(currentDriver, currentDriverDB);
 
     return DriverSyncResult(
-      currentDriver: currentDriver,
-      db: currentDriverDB,
+      currentDriver: DriverDatabase(
+        name: currentDriver.name,
+        path: currentDriver.path,
+        type: currentDriver.type,
+        db: currentDriverDB,
+      ),
       dbItemsToBeRemoved: dbItemsToBeRemoved,
       filesToBeAddedToDb: filesToBeAddedToDb,
       appConf: mc,

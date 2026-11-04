@@ -70,49 +70,9 @@ class MyApp extends StatelessWidget with WindowListener {
               onSecondary: Colors.black,
               primaryContainer: Colors.pink.shade900)),
       initialRoute: '/explore',
-      onGenerateRoute: (settings) {
-        final currentPath = Uri.parse(settings.name!).path;
-
-        final routesWithMainLayout = {
-          '/explore': {
-            'index': 0,
-            'widget': const ExplorePage(),
-          },
-          '/add': {
-            'index': 1,
-            'widget': const AddPage(),
-          },
-          '/trash': {
-            'index': 2,
-            'widget': const TrashPage(),
-          },
-          '/drivers': {
-            'index': 3,
-            'widget': const DriversPage(),
-          }
-        };
-
-        if (routesWithMainLayout.keys
-            .toList()
-            .any((element) => element == currentPath)) {
-          return NoAnimationMaterialPageRoute(
-            builder: (context) => MainLayoutWrapper(
-              selectedIndex: routesWithMainLayout[currentPath]!['index'] as int,
-              child: routesWithMainLayout[currentPath]!['widget'] as Widget,
-            ),
-          );
-        }
-
-        if (currentPath == '/select-files') {
-          return MaterialPageRoute(
-            builder: (context) => const SelectFile(),
-          );
-        }
-
-        return MaterialPageRoute(
-          builder: (context) => Container(),
-        );
-      },
+      onGenerateRoute: (settings) =>
+          RouteResolver(currentPath: Uri.parse(settings.name!).path)
+              .build(context),
     );
   }
 }
@@ -129,5 +89,59 @@ class NoAnimationMaterialPageRoute<T> extends MaterialPageRoute<T> {
   Widget buildTransitions(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation, Widget child) {
     return child;
+  }
+}
+
+class RouteResolver {
+  const RouteResolver({
+    required this.currentPath,
+  });
+
+  final String currentPath;
+
+  Widget buildRoute() {
+    switch (currentPath) {
+      case '/explore':
+        return const ExplorePage();
+      case '/add':
+        return const AddPage();
+      case '/trash':
+        return const TrashPage();
+      case '/drivers':
+        return const DriversPage();
+      case '/select-files':
+        return const SelectFile();
+      default:
+        return Container();
+    }
+  }
+
+  int routeIndex() {
+    switch (currentPath) {
+      case '/explore':
+        return 0;
+      case '/add':
+        return 1;
+      case '/trash':
+        return 2;
+      case '/drivers':
+        return 3;
+      default:
+        return 0;
+    }
+  }
+
+  MaterialPageRoute build(BuildContext context) {
+    if (currentPath == '/select-files') {
+      return MaterialPageRoute(
+        builder: (context) => const SelectFile(),
+      );
+    }
+
+    return NoAnimationMaterialPageRoute(
+        builder: (context) => MainLayoutWrapper(
+              selectedIndex: routeIndex(),
+              child: buildRoute(),
+            ));
   }
 }
