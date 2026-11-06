@@ -1,19 +1,20 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:ftm_flutter/db_service.dart';
-import 'package:ftm_flutter/driver_service.dart';
 import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
-import 'package:ftm_flutter/main_conf_repo.dart';
 import 'package:ftm_flutter/pages/add_page.dart';
 import 'package:ftm_flutter/pages/drivers_page.dart';
 import 'package:ftm_flutter/pages/select_file.dart';
 import 'package:ftm_flutter/pages/trash_page.dart';
+import 'package:ftm_flutter/repos/driver.dart';
+import 'package:ftm_flutter/services/app_conf.dart';
+import 'package:ftm_flutter/services/database.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:ftm_flutter/views/explore/view.dart';
+import 'package:ftm_flutter/services/driver.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -118,10 +119,12 @@ class RouteResolver {
 
   final String currentPath;
 
-  Widget buildRoute() {
+  Widget buildRoute(BuildContext context) {
     switch (currentPath) {
       case '/explore':
-        return const ExploreView();
+        return ExploreView(
+          exploreViewModel: context.read(),
+        );
       case '/add':
         return const AddPage();
       case '/trash':
@@ -160,7 +163,7 @@ class RouteResolver {
     return NoAnimationMaterialPageRoute(
         builder: (context) => MainLayoutWrapper(
               selectedIndex: routeIndex(),
-              child: buildRoute(),
+              child: buildRoute(context),
             ));
   }
 }

@@ -7,6 +7,8 @@ import 'package:sqlite3/sqlite3.dart';
 const fileTagTable = "fileTag";
 const fileNameColumn = "fileName";
 const tagsColumn = "tags";
+const mainDbFileName = 'ftm.db';
+const mainDbFolder = 'data';
 
 class DriverDbService {
   DriverDbService();

@@ -2,72 +2,14 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/db_service.dart';
-import 'package:ftm_flutter/main_conf_repo.dart';
+import 'package:ftm_flutter/models/app_conf.dart';
+import 'package:ftm_flutter/models/driver.dart';
+import 'package:ftm_flutter/services/app_conf.dart';
+import 'package:ftm_flutter/services/database.dart';
+import 'package:ftm_flutter/services/driver.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
-
-const _mainDbFileName = 'ftm.db';
-const _mainDbFolder = 'data';
-
-class Driver {
-  final String name;
-  final String path;
-  final String type;
-
-  Driver({
-    required this.name,
-    required this.path,
-    required this.type,
-  });
-
-  factory Driver.fromMap(Map<String, dynamic> m) {
-    final name = m['name'], path = m['path'], type = m['type'];
-    final correct = name is String && path is String && type is String;
-
-    assert(correct, 'driver map is not correct');
-
-    return Driver(
-      name: name,
-      path: path,
-      type: type,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'name': name,
-      'path': path,
-      'type': type,
-    };
-  }
-}
-
-class DriverDatabase extends Driver {
-  final Database db;
-
-  DriverDatabase({
-    required super.name,
-    required super.path,
-    required super.type,
-    required this.db,
-  });
-}
-
-class DriverSyncResult {
-  final AppConf appConf;
-  final DriverDatabase currentDriver;
-  final Iterable<String> dbItemsToBeRemoved;
-  final Iterable<File> filesToBeAddedToDb;
-
-  DriverSyncResult({
-    required this.currentDriver,
-    required this.dbItemsToBeRemoved,
-    required this.filesToBeAddedToDb,
-    required this.appConf,
-  });
-}
 
 class DriverRepo {
   final DriverService _driverService;
@@ -107,12 +49,12 @@ class DriverRepo {
       }
     }
 
-    final dataDir = Directory(p.join(currentDriver.path, _mainDbFolder));
+    final dataDir = Directory(p.join(currentDriver.path, mainDbFolder));
     if (!dataDir.existsSync()) {
       await dataDir.create(recursive: true);
     }
 
-    final dbPath = p.join(currentDriver.path, _mainDbFileName);
+    final dbPath = p.join(currentDriver.path, mainDbFileName);
 
     final currentDriverDB = await _dbService.initDB(dbPath);
 
@@ -209,14 +151,6 @@ class DriverRepo {
 
     final res = Isolate.run(computation);
     return res;
-  }
-}
-
-class DriverService {
-  Iterable<File> getAllFiles(Driver driver) {
-    final filesDir = Directory(driver.path);
-    final files = filesDir.listSync().whereType<File>();
-    return files;
   }
 }
 
