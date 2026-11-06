@@ -1,11 +1,20 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:ftm_flutter/db_service.dart';
 import 'package:ftm_flutter/io_manager.dart';
+import 'package:ftm_flutter/main_conf_repo.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
+const getCurrentDriverPath = Old__AppConfService.getCurrentDriverPath;
+const getCurrentDb = DBService.getCurrentDb;
+
+// --------------------------------------------------------------------------
+
 class FileTag {
+  static const String trashTag = '__TRASH';
+
   const FileTag(
     this.fileName,
     this.tags,
@@ -47,8 +56,8 @@ Future<void> insertAndMove_(
 ) async {
   //: move or copy file
   var f = File(ft.path);
-  // TODO copy or move by config, move by default
-  await f.copy(join(getCurrntPath(), ft.fileName));
+  // TODO: copy or move by config, move by default
+  await f.copy(join(getCurrentDriverPath(), ft.fileName));
   await f.delete();
 
   insertDB_(ft);
@@ -92,7 +101,7 @@ Future<List<FileTag>> getFilesList({
             List<String>.from(
               json.decode(e[tagsColumn]),
             ).where((element) => element != trashTag).toList(),
-            join(getCurrntPath(), e[fileNameColumn]),
+            join(getCurrentDriverPath(), e[fileNameColumn]),
           ),
         )
         .toList();
@@ -110,7 +119,7 @@ Future<Set<String>> tagsList_() => Future(() => Set.from(getCurrentDb()
 //: ----------------------------------------------------------------------------
 
 bool checkFileExist(String fileName) {
-  final fileExists = File(join(getCurrntPath(), fileName)).existsSync();
+  final fileExists = File(join(getCurrentDriverPath(), fileName)).existsSync();
 
   return fileDbExists_(fileName) && fileExists;
 }
@@ -198,7 +207,7 @@ void deleteFile(FileTag fileTag) {
   db.execute(
       "DELETE FROM $fileTagTable WHERE $fileNameColumn = '${fileTag.fileName}';");
 
-  final file = File(join(getCurrntPath(), fileTag.fileName));
+  final file = File(join(getCurrentDriverPath(), fileTag.fileName));
   try {
     file.deleteSync();
   } on FileSystemException {
@@ -220,7 +229,7 @@ Future<IntegrityRes> checkIntegrity() async {
   }
 
   //: check all files in db
-  final filesDir = Directory(getCurrntPath());
+  final filesDir = Directory(getCurrentDriverPath());
 
   final files = (await filesDir.list().toList()).whereType<File>();
 

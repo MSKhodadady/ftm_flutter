@@ -1,14 +1,18 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:ftm_flutter/db_service.dart';
+import 'package:ftm_flutter/driver_service.dart';
 import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
+import 'package:ftm_flutter/main_conf_repo.dart';
 import 'package:ftm_flutter/pages/add_page.dart';
 import 'package:ftm_flutter/pages/drivers_page.dart';
 import 'package:ftm_flutter/pages/select_file.dart';
 import 'package:ftm_flutter/pages/trash_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:provider/provider.dart';
 import 'package:ftm_flutter/views/explore/view.dart';
 
 void main() async {
@@ -51,11 +55,27 @@ void main() async {
   }
 
   //: run app
-  runApp(const MyApp());
+  runApp(MultiProvider(
+    providers: [
+      Provider(create: (ctx) => DriverService()),
+      Provider(create: (context) => DriverDbService()),
+      Provider(create: (context) => AppConfService()),
+      Provider(
+        create: (context) => DriverRepo(
+          appConfService: context.read(),
+          driverService: context.read(),
+          dbService: context.read(),
+        ),
+      ),
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget with WindowListener {
-  const MyApp({super.key});
+  const MyApp({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

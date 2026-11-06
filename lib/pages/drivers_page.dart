@@ -1,14 +1,16 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:ftm_flutter/driver_service.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/io_manager.dart';
+import 'package:ftm_flutter/main_conf_repo.dart';
 
 class DriversPage extends HookWidget {
   const DriversPage({super.key});
 
   void onSetCurrent(Driver e, currentDriver) async {
-    await setCurrentDriver(e.name);
+    await DriverService.setCurrentDriver(e.name);
     currentDriver.value = e.name;
   }
 
@@ -18,7 +20,7 @@ class DriversPage extends HookWidget {
     final currentDriver = useState('');
 
     useEffect(() {
-      final mf = getMainConf();
+      final mf = Old__AppConfService.getMainConf();
       drivers.value = mf.drivers;
       currentDriver.value = mf.currentDriver;
 
@@ -82,7 +84,8 @@ class DriversPage extends HookWidget {
                                   oldName: e.name,
                                   onRename: (newName) {
                                     if (e.name != newName) {
-                                      renameDriver(e.name, newName);
+                                      DriverService.renameDriver(
+                                          e.name, newName);
 
                                       drivers.value = drivers.value
                                           .map((j) => j.name == e.name
@@ -149,7 +152,7 @@ class RenameDriver extends HookWidget {
       nameController.addListener(() {
         nameError.value = null;
       });
-      
+
       return null;
     }, []);
 
@@ -248,8 +251,7 @@ class CreateDriver extends HookWidget {
                 TextButton(
                     onPressed: () async {
                       if (isDesktop()) {
-                        final result =
-                            await FilePicker.getDirectoryPath();
+                        final result = await FilePicker.getDirectoryPath();
 
                         if (result != null) {
                           pathController.text = result;
@@ -299,7 +301,7 @@ class CreateDriver extends HookWidget {
                 type: 'file',
               );
 
-              await addDriver(neoDriver);
+              await DriverService.addDriver(neoDriver);
 
               onSetDrivers([...drivers, neoDriver]);
 

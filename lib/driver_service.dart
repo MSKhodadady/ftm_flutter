@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/db_service.dart';
 import 'package:ftm_flutter/main_conf_repo.dart';
@@ -68,19 +70,21 @@ class DriverSyncResult {
 }
 
 class DriverRepo {
-  DriverService driverService;
-  AppConfService appConfService;
-  DriverDbService dbService;
+  final DriverService _driverService;
+  final AppConfService _appConfService;
+  final DriverDbService _dbService;
 
-  DriverRepo(
-    this.driverService,
-    this.appConfService,
-    this.dbService,
-  );
+  DriverRepo({
+    required DriverService driverService,
+    required AppConfService appConfService,
+    required DriverDbService dbService,
+  })  : _dbService = dbService,
+        _appConfService = appConfService,
+        _driverService = driverService;
 
   Future<DriverSyncResult> getCurrentDriver() async {
     //: read config from appConfService and initialize drivers
-    AppConf mc = await appConfService.readAppConf();
+    AppConf mc = await _appConfService.readAppConf();
 
     //: init current driver from driverService
     final cd = mc.drivers.firstWhereOrNull((e) => e.name == mc.currentDriver);
@@ -110,15 +114,15 @@ class DriverRepo {
 
     final dbPath = p.join(currentDriver.path, _mainDbFileName);
 
-    final currentDriverDB = await dbService.initDB(dbPath);
+    final currentDriverDB = await _dbService.initDB(dbPath);
 
     //: check db -> files sync
     final dbItemsToBeRemoved =
-        await checkSyncDbToFiles(currentDriver, currentDriverDB);
+        await _checkSyncDbToFiles(currentDriver, currentDriverDB);
 
     //: check files -> db sync
     final filesToBeAddedToDb =
-        await checkSyncFilesToDb(currentDriver, currentDriverDB);
+        await _checkSyncFilesToDb(currentDriver, currentDriverDB);
 
     return DriverSyncResult(
       currentDriver: DriverDatabase(
@@ -133,28 +137,28 @@ class DriverRepo {
     );
   }
 
-  Future<Iterable<String>> checkSyncDbToFiles(Driver driver, Database db) {
+  Future<Iterable<String>> _checkSyncDbToFiles(Driver driver, Database db) {
     // TODO: futurize it!
-    final files = driverService.getAllFiles(driver);
-    final dbFiles = dbService.getAllItems(db);
+    final files = _driverService.getAllFiles(driver);
+    final dbFiles = _dbService.getAllItems(db);
 
     final dbItemsToBeRemoved = dbFiles
         .where((dbFile) => !files.any((e) => p.basename(e.path) == dbFile));
 
     for (var e in dbItemsToBeRemoved) {
-      dbService.deleteFileTag(e, db);
+      _dbService.deleteFileTag(e, db);
     }
 
     return Future.value(dbItemsToBeRemoved);
   }
 
-  Future<Iterable<File>> checkSyncFilesToDb(Driver driver, Database db) {
+  Future<Iterable<File>> _checkSyncFilesToDb(Driver driver, Database db) {
     // TODO: futurize it!
-    final files = driverService.getAllFiles(driver);
+    final files = _driverService.getAllFiles(driver);
 
     bool checkNotExists(File file) {
       final fileName = p.basename(file.path);
-      final exists = dbService.findByFileName(fileName, db);
+      final exists = _dbService.findByFileName(fileName, db);
 
       return exists.isEmpty;
     }
@@ -164,9 +168,47 @@ class DriverRepo {
     for (var file in filesToBeAddedToDb) {
       final ft = FileTag(p.basename(file.path), [], file.path);
 
-      dbService.insertFT(ft, db);
+      _dbService.insertFT(ft, db);
     }
     return Future.value(filesToBeAddedToDb);
+  }
+
+  Future<List<FileTag>> getAllFiles({
+    required Database db,
+    List<String> includeTags = const [],
+    List<String> excludeTags = const [],
+  }) async {
+    List<FileTag> computation() {
+      final conditionList = [
+        ...includeTags.map((tag) =>
+            "json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
+        ...excludeTags.map((tag) =>
+            "not json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
+      ];
+
+      final whereClause = conditionList.isNotEmpty
+          ? "WHERE ${conditionList.join(" AND ")}"
+          : "";
+
+      final query = "SELECT * FROM $fileTagTable $whereClause;";
+
+      final res = db.select(query);
+
+      return res
+          .map(
+            (e) => FileTag(
+              e[fileNameColumn],
+              List<String>.from(
+                json.decode(e[tagsColumn]),
+              ).where((element) => element != FileTag.trashTag).toList(),
+              p.join(getCurrentDriverPath(), e[fileNameColumn]),
+            ),
+          )
+          .toList();
+    }
+
+    final res = Isolate.run(computation);
+    return res;
   }
 }
 

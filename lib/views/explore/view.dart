@@ -1,69 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
-import 'package:ftm_flutter/io_manager.dart';
+import 'package:ftm_flutter/views/explore/model.dart';
 import 'package:ftm_flutter/widget/add_tag_files.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:ftm_flutter/widget/yes_no_dialog.dart';
 
+//: FIXME:
 bool integrityChecked = false;
 
 class ExploreView extends HookWidget {
-  const ExploreView({super.key});
+  final ExploreViewModel exploreViewModel;
+
+  const ExploreView({super.key, required this.exploreViewModel});
 
   @override
   Widget build(BuildContext context) {
-    final chosenTags = useState<List<String>>([]);
-    final refreshKey = useState(UniqueKey());
-    //: returns a cached value of returned value of a function
-    final fileTagMemo = useMemoized(
-        () => getFilesList(
-              includeTags: chosenTags.value,
-              excludeTags: [trashTag],
-            ),
-        [refreshKey.value, chosenTags.value]);
-    final fileTagsFuture = useFuture(fileTagMemo);
-
-    final selectedFiles = useState<List<FileTag>>([]);
-
-    void refresh() {
-      //: sets a new key for refresh key,
-      //: causes fileTagMemo to function
-      refreshKey.value = UniqueKey();
-    }
-
     void fullRefresh() {
-      final integrityRes = checkIntegrity();
-
-      integrityRes.then((res) {
-        var snackText = "";
-
-        if (res.filesToBeAddedToDb.isNotEmpty) {
-          // ignore: prefer_interpolation_to_compose_strings
-          snackText = snackText +
-              "Some files added: " +
-              res.filesToBeAddedToDb.toList().join(" ,");
-        }
-
-        if (res.dbItemsToBeRemoved.isNotEmpty) {
-          // ignore: prefer_interpolation_to_compose_strings
-          snackText = (snackText == '' ? '' : "$snackText\n") +
-              "Some Items deleted because of missing file: " +
-              res.dbItemsToBeRemoved.toList().join(" ,");
-        }
-
-        if (snackText != '') {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(snackText)));
-          }
-        }
-
-        refresh();
-      });
+      exploreViewModel.fullRefresh();
     }
 
     if (!integrityChecked) {
@@ -79,7 +35,7 @@ class ExploreView extends HookWidget {
         mini: true,
         child: const Icon(Icons.refresh),
       ),
-      appBar: selectedFiles.value.isEmpty
+      appBar: exploreViewModel.selectedFiles.isEmpty
           ? null
           : AppBar(
               leadingWidth: 200,
@@ -89,15 +45,9 @@ class ExploreView extends HookWidget {
                   children: [
                     TextButton(
                         onPressed: () {
-                          if (selectedFiles.value.length !=
-                              (fileTagsFuture.data ?? []).length) {
-                            selectedFiles.value = fileTagsFuture.data ?? [];
-                          } else {
-                            selectedFiles.value = [];
-                          }
+                          exploreViewModel.selectDeselectAll();
                         },
-                        child: Text(selectedFiles.value.length !=
-                                (fileTagsFuture.data ?? []).length
+                        child: Text(exploreViewModel.allSelected
                             ? "Select All"
                             : "Deselect All")),
                   ],
@@ -111,22 +61,7 @@ class ExploreView extends HookWidget {
                         builder: (context) => const AddTagFiles(),
                       );
 
-                      if (newTags != null && newTags.isNotEmpty) {
-                        await Future.wait(
-                          selectedFiles.value.map((e) async {
-                            await changeFileTags(
-                              e,
-                              [
-                                ...{...e.tags, ...newTags}
-                              ],
-                            );
-                          }),
-                        );
-
-                        selectedFiles.value = [];
-
-                        refresh();
-                      }
+                      exploreViewModel.addTags(newTags);
                     },
                     child: const Text("Add Tag")),
                 TextButton(
@@ -138,15 +73,7 @@ class ExploreView extends HookWidget {
                               ));
 
                       if (res == true) {
-                        Future.wait(
-                          selectedFiles.value.map((e) async {
-                            await changeFileTags(e, [...e.tags, trashTag]);
-                          }),
-                        );
-
-                        selectedFiles.value = [];
-
-                        refresh();
+                        exploreViewModel.moveToTrash();
                       }
                     },
                     child: const Text("Trash")),
@@ -155,24 +82,24 @@ class ExploreView extends HookWidget {
       body: ListView(
         children: [
           //: tag chooser
-          selectedFiles.value.isEmpty
+          exploreViewModel.selectedFiles.isEmpty
               ? Container(
                   padding: const EdgeInsets.all(10),
                   child: TagAutocomplete(
                       onSubmitted: (tag) {
-                        chosenTags.value = [...chosenTags.value, tag];
+                        exploreViewModel.onAddTags(tag);
                       },
-                      chosenTags: chosenTags.value),
+                      chosenTags: exploreViewModel.chosenTags),
                 )
               : const SizedBox.shrink(),
           //: chosen tags
           AnimatedSize(
             duration: const Duration(milliseconds: 500),
             child: SizedBox(
-              height: chosenTags.value.isEmpty ? 0 : 40,
+              height: exploreViewModel.chosenTags.isEmpty ? 0 : 40,
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                children: chosenTags.value
+                children: exploreViewModel.chosenTags
                     .map((e) => Container(
                           padding: const EdgeInsets.only(left: 5),
                           child: Chip(
@@ -181,9 +108,7 @@ class ExploreView extends HookWidget {
                                 Theme.of(context).colorScheme.secondary),
                             side: const BorderSide(color: Colors.transparent),
                             onDeleted: () {
-                              chosenTags.value = chosenTags.value
-                                  .where((element) => element != e)
-                                  .toList();
+                              exploreViewModel.removeTag(e);
                             },
                             visualDensity: VisualDensity.compact,
                           ),
@@ -193,15 +118,15 @@ class ExploreView extends HookWidget {
             ),
           ),
           //: fileTags
-          fileTagsFuture.hasData
+          exploreViewModel.files != null
               ? Container(
                   margin: const EdgeInsets.only(bottom: 100),
                   child: Column(
-                    children: (fileTagsFuture.data as Iterable<FileTag>)
+                    children: exploreViewModel.files!
                         .map((e) => FileTagRow(
                               ft: e,
                               onTagClick: (tag) {
-                                chosenTags.value = [...chosenTags.value, tag];
+                                exploreViewModel.onAddTags(tag);
                               },
                               actions: [
                                 IconButton(
@@ -217,27 +142,18 @@ class ExploreView extends HookWidget {
                                         });
 
                                     if (k is Changed) {
-                                      await changeFile(e, k.newFileTag);
-                                      refresh();
+                                      await exploreViewModel.changeTagsOfFile(
+                                          e, k.newFileTag);
                                     }
                                   },
                                 )
                               ],
-                              isSelected: selectedFiles.value.isEmpty
+                              isSelected: exploreViewModel.selectedFiles.isEmpty
                                   ? null
-                                  : selectedFiles.value
+                                  : exploreViewModel.selectedFiles
                                       .any((element) => element.equals(e)),
                               onSelect: (isAdded) {
-                                if (isAdded != null && isAdded) {
-                                  selectedFiles.value = [
-                                    ...selectedFiles.value,
-                                    e
-                                  ];
-                                } else {
-                                  selectedFiles.value = selectedFiles.value
-                                      .where((element) => !element.equals(e))
-                                      .toList();
-                                }
+                                exploreViewModel.onSelectFile(isAdded, e);
                               },
                             ))
                         .toList(),
