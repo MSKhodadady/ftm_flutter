@@ -1,16 +1,15 @@
 import 'dart:io';
-
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
 import 'package:ftm_flutter/pages/add_page.dart';
 import 'package:ftm_flutter/pages/drivers_page.dart';
-import 'package:ftm_flutter/pages/explore_page.dart';
 import 'package:ftm_flutter/pages/select_file.dart';
 import 'package:ftm_flutter/pages/trash_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:ftm_flutter/views/explore/view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -102,7 +101,7 @@ class RouteResolver {
   Widget buildRoute() {
     switch (currentPath) {
       case '/explore':
-        return const ExplorePage();
+        return const ExploreView();
       case '/add':
         return const AddPage();
       case '/trash':

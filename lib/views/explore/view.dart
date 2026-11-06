@@ -11,8 +11,8 @@ import 'package:ftm_flutter/widget/yes_no_dialog.dart';
 
 bool integrityChecked = false;
 
-class ExplorePage extends HookWidget {
-  const ExplorePage({super.key});
+class ExploreView extends HookWidget {
+  const ExploreView({super.key});
 
   @override
   Widget build(BuildContext context) {
