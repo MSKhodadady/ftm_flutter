@@ -112,6 +112,7 @@ class DriverRepo {
     return Future.value(filesToBeAddedToDb);
   }
 
+  //: TODO: add pagination
   Future<List<FileTag>> getAllFiles({
     required DriverDatabase dd,
     List<String> includeTags = const [],

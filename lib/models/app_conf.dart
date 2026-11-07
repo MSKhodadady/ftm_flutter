@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/models/driver.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
+import 'package:ftm_flutter/util/io.dart';
 
 const _mainDriverName = 'FTM';
 

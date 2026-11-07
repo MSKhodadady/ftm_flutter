@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
+import 'package:ftm_flutter/util/io.dart';
 import 'package:get/get.dart';
-import '../io_manager.dart';
 
 class MainLayoutWrapper extends StatelessWidget {
   const MainLayoutWrapper(

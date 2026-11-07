@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
 import 'package:ftm_flutter/pages/add_page.dart';
 import 'package:ftm_flutter/pages/drivers_page.dart';
@@ -20,19 +19,19 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isAndroid) {
+    //: FIXME: move these out
+
     //: check no error for new version in android
     var deviceInfo = DeviceInfoPlugin();
     var androidInfo = await deviceInfo.androidInfo;
 
     if (androidInfo.version.sdkInt >= 30) {
       if (await Permission.manageExternalStorage.request().isGranted) {
-        await initApp();
       } else {
         exit(0);
       }
     } else {
       if (await Permission.storage.request().isGranted) {
-        await initApp();
       } else {
         exit(0);
       }
@@ -49,11 +48,7 @@ void main() async {
       await windowManager.show();
       await windowManager.focus();
     });
-
-    await initApp();
-  } else if (Platform.isWindows) {
-    await initApp();
-  }
+  } else if (Platform.isWindows) {}
 
   //: run app
   runApp(MultiProvider(

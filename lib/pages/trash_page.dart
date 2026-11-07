@@ -3,7 +3,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/hooks/loading.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
-import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/yes_no_dialog.dart';
 
@@ -15,7 +14,8 @@ class TrashPage extends HookWidget {
     final refreshKey = useState(UniqueKey());
     //: returns a cached value of returned value of a function
     final fileTagMemo = useMemoized(
-        () => getFilesList(includeTags: [trashTag]), [refreshKey.value]);
+        () => getFilesList(includeTags: [FileTag.trashTag]),
+        [refreshKey.value]);
     final fileTagsFuture = useFuture(fileTagMemo);
     final selectedFiles = useState<List<FileTag>>([]);
 

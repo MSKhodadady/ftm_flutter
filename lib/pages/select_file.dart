@@ -1,11 +1,10 @@
 import 'dart:io';
-
+import 'package:ftm_flutter/util/io.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
-import 'package:ftm_flutter/io_manager.dart';
 import 'package:ftm_flutter/widget/file_leading.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';

@@ -107,7 +107,7 @@ Future<List<FileTag>> getFilesList({
             e[fileNameColumn],
             List<String>.from(
               json.decode(e[tagsColumn]),
-            ).where((element) => element != trashTag).toList(),
+            ).where((element) => element != FileTag.trashTag).toList(),
             join(getCurrentDriverPath(), e[fileNameColumn]),
           ),
         )
@@ -270,5 +270,6 @@ Future<IntegrityRes> checkIntegrity() async {
 //: ----------------------------------------------------------------------------
 
 void restoreTrashFile(FileTag f) {
-  changeFileTags(f, f.tags.where((element) => element != trashTag).toList());
+  changeFileTags(
+      f, f.tags.where((element) => element != FileTag.trashTag).toList());
 }
