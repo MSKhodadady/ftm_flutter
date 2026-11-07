@@ -5,6 +5,7 @@ import 'package:ftm_flutter/hooks/loading.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/yes_no_dialog.dart';
+import 'package:ftm_flutter/models/file_tag.dart';
 
 class TrashPage extends HookWidget {
   const TrashPage({super.key});

@@ -8,6 +8,7 @@ import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/widget/file_leading.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
+import 'package:ftm_flutter/models/file_tag.dart';
 
 class SelectFile extends HookWidget {
   const SelectFile({super.key});

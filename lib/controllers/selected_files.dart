@@ -1,5 +1,5 @@
-import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:get/get.dart';
+import 'package:ftm_flutter/models/file_tag.dart';
 
 class SelectedFilesController extends GetxController {
   List<FileTag> selectedFiles = [];

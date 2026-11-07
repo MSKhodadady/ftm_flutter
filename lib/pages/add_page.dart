@@ -8,6 +8,7 @@ import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:get/get.dart';
+import 'package:ftm_flutter/models/file_tag.dart';
 
 class AddPage extends HookWidget {
   const AddPage({super.key});

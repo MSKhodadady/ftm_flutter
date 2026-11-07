@@ -1,10 +1,10 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:path/path.dart' as path;
+import 'package:ftm_flutter/models/file_tag.dart';
 
 import '../data/file_tag.dart';
 

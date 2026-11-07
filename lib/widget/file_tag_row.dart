@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/widget/file_leading.dart';
+import 'package:ftm_flutter/models/file_tag.dart';
 
 class FileTagRow extends StatelessWidget {
   const FileTagRow({
