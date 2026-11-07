@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:ftm_flutter/data/file_tag.dart';
+import 'package:flutter/foundation.dart';
 import 'package:ftm_flutter/models/app_conf.dart';
 import 'package:ftm_flutter/models/driver.dart';
 import 'package:ftm_flutter/services/app_conf.dart';
@@ -8,6 +8,7 @@ import 'package:ftm_flutter/services/driver.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
+import 'package:ftm_flutter/models/file_tag.dart';
 
 class DriverRepo {
   final DriverService _driverService;
@@ -124,6 +125,36 @@ class DriverRepo {
 
     return res.map((e) => FileTag.fromMap(e, dd.path)).toList();
   }
+
+  Future<void> changeFileTags(
+      Database db, FileTag ft, List<String> tags) async {
+    await _dbService.changeFileTags(db, ft, tags);
+  }
+
+  Future<bool> fileExists(DriverDatabase dd, String fileName) async {
+    return _driverService.checkFileExist(fileName, dd.path) &&
+        _dbService.fileDbExists(dd.db, fileName);
+  }
+
+  Future<void> changeFile(
+    DriverDatabase dd,
+    FileTag oldFT,
+    FileTag newFT,
+  ) async {
+    if (oldFT.fileName != newFT.fileName) {
+      final exists = await fileExists(dd, newFT.fileName);
+      if (!exists) {
+        throw FileExistsException();
+      } else {
+        _driverService.renameFile(oldFT, newFT);
+        _dbService.rename(dd.db, oldFT.fileName, newFT.fileName);
+      }
+    }
+
+    if (!listEquals(newFT.tags, oldFT.tags)) {
+      await changeFileTags(dd.db, newFT, newFT.tags);
+    }
+  }
 }
 
 class CannotCreateDriverDirException implements Exception {
@@ -139,3 +170,5 @@ class CannotCreateDriverDirException implements Exception {
   String toString() =>
       'CannotCreateDriverDirException: $message - Driver: ${driver.name} at ${driver.path}';
 }
+
+class FileExistsException implements Exception {}

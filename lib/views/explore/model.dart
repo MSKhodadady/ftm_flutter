@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/models/driver.dart';
 import 'package:ftm_flutter/repos/driver.dart';
+import 'package:ftm_flutter/models/file_tag.dart';
 
 class ExploreViewModel extends ChangeNotifier {
   DriverRepo driverRepo;
@@ -65,39 +65,40 @@ class ExploreViewModel extends ChangeNotifier {
 
   Future<void> addTags(List<String>? newTags) async {
     if (newTags != null && newTags.isNotEmpty) {
-      await Future.wait(
-        _selectedFiles.map((e) async {
-          //: FIXME:
-          await changeFileTags(
-            e,
-            [
-              ...{...e.tags, ...newTags}
-            ],
-          );
-        }),
-      );
+      final dd = await init();
+
+      //: TODO: do like Promise.all in Js
+      for (var e in _selectedFiles) {
+        await driverRepo.changeFileTags(
+          dd.db,
+          e,
+          [
+            ...{...e.tags, ...newTags}
+          ],
+        );
+      }
 
       _selectedFiles = [];
 
-      getFilesList();
-
-      notifyListeners();
+      await getFilesList();
     }
   }
 
-  void moveToTrash() {
-    Future.wait(
-      _selectedFiles.map((e) async {
-        //: FIXME:
-        await changeFileTags(e, [...e.tags, FileTag.trashTag]);
-      }),
-    );
+  Future<void> moveToTrash() async {
+    final dd = await init();
+
+    //: TODO: do like Promise.all in Js
+    for (var e in _selectedFiles) {
+      await driverRepo.changeFileTags(
+        dd.db,
+        e,
+        [...e.tags, FileTag.trashTag],
+      );
+    }
 
     _selectedFiles = [];
 
-    getFilesList();
-
-    notifyListeners();
+    await getFilesList();
   }
 
   void removeTag(String e) {
@@ -108,19 +109,16 @@ class ExploreViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void onAddTags(String tag) {
+  Future<void> onAddTags(String tag) async {
     _chosenTags = [..._chosenTags, tag];
 
-    getFilesList();
-
-    notifyListeners();
+    await getFilesList();
   }
 
   Future<void> changeTagsOfFile(FileTag oldFT, FileTag newFT) async {
-    //: FIXME:
-    await changeFile(oldFT, newFT);
-    getFilesList();
-    notifyListeners();
+    final dd = await init();
+    await driverRepo.changeFile(dd, oldFT, newFT);
+    await getFilesList();
   }
 
   Future<void> onSelectFile(bool? isAdded, FileTag e) async {

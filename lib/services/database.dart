@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'dart:isolate';
-
+import 'package:ftm_flutter/models/file_tag.dart';
 import 'package:flutter/foundation.dart';
-import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 const fileTagTable = "fileTag";
@@ -107,6 +106,37 @@ class DriverDbService {
       final res = db.select(query);
 
       return res;
+    });
+  }
+
+  Future<void> changeFileTags(
+      Database db, FileTag ft, List<String> tags) async {
+    await Isolate.run(
+      () {
+        db.execute("""
+            UPDATE $fileTagTable
+            SET $tagsColumn = '${jsonEncode(tags)}'
+            WHERE $fileNameColumn = '${ft.fileName}';
+          """);
+      },
+    );
+  }
+
+  bool fileDbExists(Database db, String fileName) {
+    final dbExists = db.select(
+        "SELECT * FROM $fileTagTable WHERE $fileNameColumn = ?1",
+        [fileName]).isNotEmpty;
+    return dbExists;
+  }
+
+  Future<void> rename(
+      Database db, String oldFileName, String newFileName) async {
+    await Isolate.run(() {
+      db.execute("""
+            UPDATE $fileTagTable
+            SET $fileNameColumn = '$newFileName'
+            WHERE $fileNameColumn = '$oldFileName';
+          """);
     });
   }
 }
