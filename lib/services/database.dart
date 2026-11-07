@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
@@ -23,49 +24,52 @@ class DriverDbService {
   }
 
   Future<Database> initDB(String path) async {
-    final db = sqlite3.open(path);
+    Database compute() {
+      final db = sqlite3.open(path);
 
-    final dbVersion =
-        db.select("PRAGMA user_version").first['user_version'] as int;
-    if (kDebugMode) print("current database version is: $dbVersion");
-
-    //: migration 1
-    if (dbVersion < 1) {
-      db.execute('CREATE TABLE fileTag (fileName TEXT PRIMARY KEY, tags JSON)');
-    }
-
-    //: IMPORTANT {
-    const lastDbVersion = 1;
-    //: }
-
-    //: set migration version to last one
-    if (dbVersion != lastDbVersion) {
-      db.execute("PRAGMA user_version = $lastDbVersion");
-
-      final myLastDbVersion =
+      final dbVersion =
           db.select("PRAGMA user_version").first['user_version'] as int;
-      if (kDebugMode) print("The last db version is: $myLastDbVersion");
+      if (kDebugMode) print("current database version is: $dbVersion");
+
+      //: migration 1
+      if (dbVersion < 1) {
+        db.execute(
+            'CREATE TABLE fileTag (fileName TEXT PRIMARY KEY, tags JSON)');
+      }
+
+      //: IMPORTANT {
+      const lastDbVersion = 1;
+      //: }
+
+      //: set migration version to last one
+      if (dbVersion != lastDbVersion) {
+        db.execute("PRAGMA user_version = $lastDbVersion");
+
+        final myLastDbVersion =
+            db.select("PRAGMA user_version").first['user_version'] as int;
+        if (kDebugMode) print("The last db version is: $myLastDbVersion");
+      }
+
+      _registerDBFunctions(db);
+
+      return db;
     }
 
-    _registerDBFunctions(db);
-
-    return db;
+    return Isolate.run(compute);
   }
 
   Future<void> insertFT(FileTag ft, Database db) async {
-    await Future(() {
+    await Isolate.run(() {
       db.execute(
           "INSERT INTO $fileTagTable ($fileNameColumn, $tagsColumn) VALUES (?1, json(?2));",
           [ft.fileName, json.encode(ft.tags)]);
     });
   }
 
-  Iterable<String> getAllItems(Database db) {
-    final dbFiles = db
+  Future<Iterable<String>> getAllItems(Database db) {
+    return Isolate.run(() => db
         .select("SELECT $fileNameColumn FROM $fileTagTable;")
-        .map<String>((e) => e[fileNameColumn]);
-
-    return dbFiles;
+        .map<String>((e) => e[fileNameColumn]));
   }
 
   void deleteFileTag(String fileName, Database db) {
@@ -78,5 +82,30 @@ class DriverDbService {
         "SELECT * FROM $fileTagTable WHERE $fileNameColumn = ?1;", [fileName]);
 
     return result;
+  }
+
+  Future<ResultSet> getFiles({
+    required Database db,
+    List<String> includeTags = const [],
+    List<String> excludeTags = const [],
+  }) {
+    return Isolate.run(() {
+      final conditionList = [
+        ...includeTags.map((tag) =>
+            "json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
+        ...excludeTags.map((tag) =>
+            "not json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
+      ];
+
+      final whereClause = conditionList.isNotEmpty
+          ? "WHERE ${conditionList.join(" AND ")}"
+          : "";
+
+      final query = "SELECT * FROM $fileTagTable $whereClause;";
+
+      final res = db.select(query);
+
+      return res;
+    });
   }
 }

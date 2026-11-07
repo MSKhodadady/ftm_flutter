@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 import 'package:ftm_flutter/data/file_tag.dart';
 import 'package:ftm_flutter/models/app_conf.dart';
 import 'package:ftm_flutter/models/driver.dart';
@@ -79,10 +77,10 @@ class DriverRepo {
     );
   }
 
-  Future<Iterable<String>> _checkSyncDbToFiles(Driver driver, Database db) {
-    // TODO: futurize it!
-    final files = _driverService.getAllFiles(driver);
-    final dbFiles = _dbService.getAllItems(db);
+  Future<Iterable<String>> _checkSyncDbToFiles(
+      Driver driver, Database db) async {
+    final files = await _driverService.getAllFiles(driver);
+    final dbFiles = await _dbService.getAllItems(db);
 
     final dbItemsToBeRemoved = dbFiles
         .where((dbFile) => !files.any((e) => p.basename(e.path) == dbFile));
@@ -91,12 +89,11 @@ class DriverRepo {
       _dbService.deleteFileTag(e, db);
     }
 
-    return Future.value(dbItemsToBeRemoved);
+    return dbItemsToBeRemoved;
   }
 
-  Future<Iterable<File>> _checkSyncFilesToDb(Driver driver, Database db) {
-    // TODO: futurize it!
-    final files = _driverService.getAllFiles(driver);
+  Future<Iterable<File>> _checkSyncFilesToDb(Driver driver, Database db) async {
+    final files = await _driverService.getAllFiles(driver);
 
     bool checkNotExists(File file) {
       final fileName = p.basename(file.path);
@@ -110,47 +107,21 @@ class DriverRepo {
     for (var file in filesToBeAddedToDb) {
       final ft = FileTag(p.basename(file.path), [], file.path);
 
-      _dbService.insertFT(ft, db);
+      await _dbService.insertFT(ft, db);
     }
     return Future.value(filesToBeAddedToDb);
   }
 
   Future<List<FileTag>> getAllFiles({
-    required Database db,
+    required DriverDatabase dd,
     List<String> includeTags = const [],
     List<String> excludeTags = const [],
   }) async {
-    List<FileTag> computation() {
-      final conditionList = [
-        ...includeTags.map((tag) =>
-            "json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
-        ...excludeTags.map((tag) =>
-            "not json_string_list_element_exist($tagsColumn ->> '\$', '$tag')"),
-      ];
+    final db = dd.db;
+    final res = await _dbService.getFiles(
+        db: db, excludeTags: excludeTags, includeTags: includeTags);
 
-      final whereClause = conditionList.isNotEmpty
-          ? "WHERE ${conditionList.join(" AND ")}"
-          : "";
-
-      final query = "SELECT * FROM $fileTagTable $whereClause;";
-
-      final res = db.select(query);
-
-      return res
-          .map(
-            (e) => FileTag(
-              e[fileNameColumn],
-              List<String>.from(
-                json.decode(e[tagsColumn]),
-              ).where((element) => element != FileTag.trashTag).toList(),
-              p.join(getCurrentDriverPath(), e[fileNameColumn]),
-            ),
-          )
-          .toList();
-    }
-
-    final res = Isolate.run(computation);
-    return res;
+    return res.map((e) => FileTag.fromMap(e, dd.path)).toList();
   }
 }
 

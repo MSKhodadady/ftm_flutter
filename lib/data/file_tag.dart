@@ -1,14 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:ftm_flutter/db_service.dart';
 import 'package:ftm_flutter/io_manager.dart';
-import 'package:ftm_flutter/main_conf_repo.dart';
+import 'package:ftm_flutter/services/database.dart';
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
-
-const getCurrentDriverPath = Old__AppConfService.getCurrentDriverPath;
-const getCurrentDb = DBService.getCurrentDb;
+import 'package:path/path.dart' as p;
 
 // --------------------------------------------------------------------------
 
@@ -20,6 +17,16 @@ class FileTag {
     this.tags,
     this.path,
   );
+
+  factory FileTag.fromMap(Map<String, dynamic> e, String currentDriverPath) {
+    return FileTag(
+      e[fileNameColumn],
+      List<String>.from(
+        json.decode(e[tagsColumn]),
+      ).where((element) => element != FileTag.trashTag).toList(),
+      p.join(currentDriverPath, e[fileNameColumn]),
+    );
+  }
 
   final String fileName;
   final List<String> tags;

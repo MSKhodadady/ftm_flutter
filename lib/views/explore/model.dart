@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/driver_service.dart';
+import 'package:ftm_flutter/models/driver.dart';
+import 'package:ftm_flutter/repos/driver.dart';
 
 class ExploreViewModel extends ChangeNotifier {
   DriverRepo driverRepo;
@@ -30,10 +31,13 @@ class ExploreViewModel extends ChangeNotifier {
   }
 
   Future<void> getFilesList() async {
-    var db = (await init()).db;
+    var dd = (await init());
 
     _files = await driverRepo.getAllFiles(
-        db: db, excludeTags: [FileTag.trashTag], includeTags: _chosenTags);
+      dd: dd,
+      excludeTags: [FileTag.trashTag],
+      includeTags: _chosenTags,
+    );
 
     notifyListeners();
   }
