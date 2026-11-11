@@ -11,6 +11,7 @@ class ExploreViewModel extends ChangeNotifier {
   });
 
   DriverDatabase? _driverDatabase;
+  bool integrityChecked = false;
 
   List<FileTag>? _files; // null means not-loaded
   List<String> _chosenTags = [];

@@ -8,9 +8,6 @@ import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
 import 'package:ftm_flutter/widget/yes_no_dialog.dart';
 
-//: FIXME:
-bool integrityChecked = false;
-
 class ExploreView extends HookWidget {
   final ExploreViewModel exploreViewModel;
 
@@ -22,39 +19,41 @@ class ExploreView extends HookWidget {
       exploreViewModel.fullRefresh();
     }
 
-    if (!integrityChecked) {
+    if (!exploreViewModel.integrityChecked) {
       fullRefresh();
-      integrityChecked = true;
+      exploreViewModel.integrityChecked = true;
     }
 
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          fullRefresh();
-        },
-        mini: true,
-        child: const Icon(Icons.refresh),
-      ),
-      appBar: exploreViewModel.selectedFiles.isEmpty
-          ? null
-          : AppBar(
-              leadingWidth: 200,
-              leading: Container(
-                margin: const EdgeInsets.only(left: 5),
-                child: Row(
-                  children: [
-                    TextButton(
-                        onPressed: () {
-                          exploreViewModel.selectDeselectAll();
-                        },
-                        child: Text(exploreViewModel.allSelected
-                            ? "Select All"
-                            : "Deselect All")),
-                  ],
+    return ListenableBuilder(
+      listenable: exploreViewModel,
+      builder: (context, child) => Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            fullRefresh();
+          },
+          mini: true,
+          child: const Icon(Icons.refresh),
+        ),
+        appBar: exploreViewModel.selectedFiles.isEmpty
+            ? null
+            : AppBar(
+                leadingWidth: 200,
+                leading: Container(
+                  margin: const EdgeInsets.only(left: 5),
+                  child: Row(
+                    children: [
+                      TextButton(
+                          onPressed: () => exploreViewModel.selectDeselectAll(),
+                          child: Text(
+                            exploreViewModel.allSelected
+                                ? "Select All"
+                                : "Deselect All",
+                          )),
+                    ],
+                  ),
                 ),
-              ),
-              actions: [
-                TextButton(
+                actions: [
+                  TextButton(
                     onPressed: () async {
                       final newTags = await showDialog<List<String>>(
                         context: context,
@@ -63,44 +62,48 @@ class ExploreView extends HookWidget {
 
                       exploreViewModel.addTags(newTags);
                     },
-                    child: const Text("Add Tag")),
-                TextButton(
+                    child: const Text("Add Tag"),
+                  ),
+                  TextButton(
                     onPressed: () async {
                       final res = await showDialog<bool?>(
-                          context: context,
-                          builder: (context) => const YesNoDialog(
-                                quest: "Move to Trash?",
-                              ));
+                        context: context,
+                        builder: (context) =>
+                            const YesNoDialog(quest: "Move to Trash?"),
+                      );
 
                       if (res == true) {
                         exploreViewModel.moveToTrash();
                       }
                     },
-                    child: const Text("Trash")),
-              ],
-            ),
-      body: ListView(
-        children: [
-          //: tag chooser
-          exploreViewModel.selectedFiles.isEmpty
-              ? Container(
-                  padding: const EdgeInsets.all(10),
-                  child: TagAutocomplete(
+                    child: const Text("Trash"),
+                  )
+                ],
+              ),
+        body: ListView(
+          children: [
+            //: tag chooser
+            exploreViewModel.selectedFiles.isEmpty
+                ? Container(
+                    padding: const EdgeInsets.all(10),
+                    child: TagAutocomplete(
                       onSubmitted: (tag) {
                         exploreViewModel.onAddTags(tag);
                       },
-                      chosenTags: exploreViewModel.chosenTags),
-                )
-              : const SizedBox.shrink(),
-          //: chosen tags
-          AnimatedSize(
-            duration: const Duration(milliseconds: 500),
-            child: SizedBox(
-              height: exploreViewModel.chosenTags.isEmpty ? 0 : 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: exploreViewModel.chosenTags
-                    .map((e) => Container(
+                      chosenTags: exploreViewModel.chosenTags,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+            //: chosen tags
+            AnimatedSize(
+              duration: const Duration(milliseconds: 500),
+              child: SizedBox(
+                height: exploreViewModel.chosenTags.isEmpty ? 0 : 40,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: exploreViewModel.chosenTags
+                      .map(
+                        (e) => Container(
                           padding: const EdgeInsets.only(left: 5),
                           child: Chip(
                             label: Text(e),
@@ -112,22 +115,23 @@ class ExploreView extends HookWidget {
                             },
                             visualDensity: VisualDensity.compact,
                           ),
-                        ))
-                    .toList(),
+                        ),
+                      )
+                      .toList(),
+                ),
               ),
             ),
-          ),
-          //: fileTags
-          exploreViewModel.files != null
-              ? Container(
-                  margin: const EdgeInsets.only(bottom: 100),
-                  child: Column(
-                    children: exploreViewModel.files!
-                        .map((e) => FileTagRow(
+            //: fileTags
+            exploreViewModel.files != null
+                ? Container(
+                    margin: const EdgeInsets.only(bottom: 100),
+                    child: Column(
+                      children: exploreViewModel.files!
+                          .map(
+                            (e) => FileTagRow(
                               ft: e,
-                              onTagClick: (tag) {
-                                exploreViewModel.onAddTags(tag);
-                              },
+                              onTagClick: (tag) =>
+                                  exploreViewModel.onAddTags(tag),
                               actions: [
                                 IconButton(
                                   icon: const Icon(ZiconOutline.pen),
@@ -152,15 +156,16 @@ class ExploreView extends HookWidget {
                                   ? null
                                   : exploreViewModel.selectedFiles
                                       .any((element) => element.equals(e)),
-                              onSelect: (isAdded) {
-                                exploreViewModel.onSelectFile(isAdded, e);
-                              },
-                            ))
-                        .toList(),
-                  ),
-                )
-              : const Text("No Data"),
-        ],
+                              onSelect: (isAdded) =>
+                                  exploreViewModel.onSelectFile(isAdded, e),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  )
+                : const Text("No Data"),
+          ],
+        ),
       ),
     );
   }
