@@ -20,4 +20,12 @@ class DriverService {
     var f = File(oldFT.path);
     await f.rename(newFT.path);
   }
+
+  Future<void> moveFileToDriver(String driverPath, FileTag ft) async {
+    //: move or copy file
+    var f = File(ft.path);
+    // TODO: copy or move by config, move by default
+    await f.copy(p.join(driverPath, ft.fileName));
+    await f.delete();
+  }
 }

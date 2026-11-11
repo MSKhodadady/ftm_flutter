@@ -7,33 +7,6 @@ import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 import 'package:path/path.dart' as p;
 
-// --------------------------------------------------------------------------
-
-//: ----------------------------------------------------------------------------
-
-Future<void> insertAndMove_(
-  FileTag ft,
-  /* {bool copy = false} */
-) async {
-  //: move or copy file
-  var f = File(ft.path);
-  // TODO: copy or move by config, move by default
-  await f.copy(join(getCurrentDriverPath(), ft.fileName));
-  await f.delete();
-
-  insertDB_(ft);
-}
-
-Future<void> insertDB_(FileTag ft) async {
-  await Future(() {
-    getCurrentDb().execute(
-        "INSERT INTO $fileTagTable ($fileNameColumn, $tagsColumn) VALUES (?1, json(?2));",
-        [ft.fileName, json.encode(ft.tags)]);
-  });
-}
-
-//: ----------------------------------------------------------------------------
-
 Future<List<FileTag>> getFilesList({
   List<String> includeTags = const [],
   List<String> excludeTags = const [],
@@ -119,33 +92,6 @@ Future<FileTagExistStatus> checkAllFilesExist(Iterable<FileTag> files) async {
 
 class FileExistsException implements Exception {}
 
-Future<void> changeFile(FileTag oldFT, FileTag newFT) async {
-  if (oldFT.fileName != newFT.fileName) {
-    if (checkFileExist(newFT.fileName)) {
-      throw FileExistsException();
-    } else {
-      var f = File(oldFT.path);
-      await f.rename(newFT.path);
-
-      final db = getCurrentDb();
-
-      await Future(
-        () {
-          db.execute("""
-            UPDATE $fileTagTable
-            SET $fileNameColumn = '${newFT.fileName}'
-            WHERE $fileNameColumn = '${oldFT.fileName}';
-          """);
-        },
-      );
-    }
-  }
-
-  if (!listEquals(newFT.tags, oldFT.tags)) {
-    await changeFileTags(newFT, newFT.tags);
-  }
-}
-
 Future<void> changeFileTags(FileTag ft, List<String> tags) async {
   final db = getCurrentDb();
 
@@ -175,53 +121,6 @@ void deleteFile(FileTag fileTag) {
     // ignored
   }
 }
-
-//: ----------------------------------------------------------------------------
-
-class IntegrityRes {
-  final List<String> filesToBeAddedToDb, dbItemsToBeRemoved;
-
-  IntegrityRes(this.filesToBeAddedToDb, this.dbItemsToBeRemoved);
-}
-
-Future<IntegrityRes> checkIntegrity() async {
-  String getFileName(File f) {
-    return basename(f.path);
-  }
-
-  //: check all files in db
-  final filesDir = Directory(getCurrentDriverPath());
-
-  final files = (await filesDir.list().toList()).whereType<File>();
-
-  final filesToBeAddedToDb =
-      files.where((i) => !fileDbExists_(getFileName(i))).toList();
-
-  for (var file in filesToBeAddedToDb) {
-    final ft = FileTag(getFileName(file), [], file.path);
-    await insertDB_(ft);
-  }
-
-  //: check all db items exist
-  final dbFiles = getCurrentDb()
-      .select("SELECT $fileNameColumn FROM $fileTagTable;")
-      .map<String>((e) => e[fileNameColumn]);
-
-  final dbItemsToBeRemoved =
-      dbFiles.where((dbFile) => !files.any((e) => getFileName(e) == dbFile));
-
-  for (var e in dbItemsToBeRemoved) {
-    getCurrentDb()
-        .execute("DELETE FROM $fileTagTable WHERE $fileNameColumn = '$e';");
-  }
-
-  return IntegrityRes(
-    filesToBeAddedToDb.map((e) => getFileName(e)).toList(),
-    dbItemsToBeRemoved.toList(),
-  );
-}
-
-//: ----------------------------------------------------------------------------
 
 void restoreTrashFile(FileTag f) {
   changeFileTags(

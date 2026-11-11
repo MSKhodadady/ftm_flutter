@@ -1,14 +1,17 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
-import 'package:ftm_flutter/pages/add_page.dart';
+import 'package:ftm_flutter/views/add/model.dart';
+import 'package:ftm_flutter/views/add/view.dart';
 import 'package:ftm_flutter/pages/drivers_page.dart';
 import 'package:ftm_flutter/pages/select_file.dart';
 import 'package:ftm_flutter/pages/trash_page.dart';
 import 'package:ftm_flutter/repos/driver.dart';
 import 'package:ftm_flutter/services/app_conf.dart';
 import 'package:ftm_flutter/services/database.dart';
+import 'package:ftm_flutter/views/explore/model.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:provider/provider.dart';
@@ -63,6 +66,19 @@ void main() async {
           dbService: context.read(),
         ),
       ),
+      Provider(create: (context) => SelectedFilesState()),
+      //
+      // VIEW MODELS ----------------------------------------------------------
+      //
+      Provider(
+        create: (context) => ExploreViewModel(driverRepo: context.read()),
+      ),
+      Provider(
+        create: (context) => AddViewModel(
+          selectedFilesState: context.read(),
+          driverRepo: context.read(),
+        ),
+      )
     ],
     child: const MyApp(),
   ));
@@ -121,7 +137,9 @@ class RouteResolver {
           exploreViewModel: context.read(),
         );
       case '/add':
-        return const AddPage();
+        return AddPage(
+          addViewModel: context.read(),
+        );
       case '/trash':
         return const TrashPage();
       case '/drivers':

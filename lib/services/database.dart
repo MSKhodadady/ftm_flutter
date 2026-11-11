@@ -139,4 +139,15 @@ class DriverDbService {
           """);
     });
   }
+
+  Future<void> insertFileTagDb(Database db, FileTag ft) async {
+    await Isolate.run(() {
+      //
+      db.execute(
+        "INSERT INTO $fileTagTable ($fileNameColumn, $tagsColumn) VALUES (?1, json(?2));",
+        [ft.fileName, json.encode(ft.tags)],
+      );
+      //
+    });
+  }
 }

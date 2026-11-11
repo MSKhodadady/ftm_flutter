@@ -1,32 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:ftm_flutter/data/file_tag.dart';
-import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
+import 'package:ftm_flutter/views/add/model.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete.dart';
-import 'package:get/get.dart';
-import 'package:ftm_flutter/models/file_tag.dart';
 
-class AddPage extends HookWidget {
-  const AddPage({super.key});
+class AddPage extends StatelessWidget {
+  final AddViewModel addViewModel;
+  const AddPage({
+    super.key,
+    required this.addViewModel,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final chosenTags = useState<List<String>>([]);
-
-    return GetBuilder<SelectedFilesController>(
-      builder: (selectedFilesController) => Scaffold(
+    return ListenableBuilder(
+      listenable: addViewModel,
+      builder: (context, child) => Scaffold(
         floatingActionButton: FloatingActionButton(
             //: done selecting
             onPressed: () async {
-              await Future.wait(selectedFilesController.selectedFiles
-                  .map((e) => FileTag(e.fileName,
-                      {...e.tags, ...chosenTags.value}.toList(), e.path))
-                  .map((e) => insertAndMove_(e)));
-
+              await addViewModel.onPressAdd();
               if (context.mounted) {
                 Navigator.pushNamed(context, '/explore');
               }
@@ -40,23 +35,21 @@ class AddPage extends HookWidget {
                 padding: const EdgeInsets.all(10),
                 child: TagAutocomplete(
                   title: "Choose tags for all selected files",
-                  chosenTags: chosenTags.value,
+                  chosenTags: addViewModel.chosenTags,
                   onSubmitted: (e) {
-                    chosenTags.value = [...chosenTags.value, e];
+                    addViewModel.addChosenTag(e);
                   },
                 ),
               ),
               //: tag list
               ChosenTagList(
-                  chosenTags: chosenTags.value,
+                  chosenTags: addViewModel.chosenTags,
                   onDeleted: (e) {
-                    chosenTags.value = chosenTags.value
-                        .where((element) => element != e)
-                        .toList();
+                    addViewModel.removeChosenTag(e);
                   }),
               //: selected files
               Column(
-                children: selectedFilesController.selectedFiles
+                children: addViewModel.selectedFiles
                     .map((e) => FileTagRow(
                           ft: e,
                           onTagClick: (s) {},
@@ -74,14 +67,14 @@ class AddPage extends HookWidget {
                                     });
 
                                 if (k is Changed) {
-                                  selectedFilesController.changeFile(
+                                  addViewModel.changeSelectedFile(
                                       e, k.newFileTag);
                                 }
                               },
                             ),
                             IconButton(
                               onPressed: () {
-                                selectedFilesController.remove(e);
+                                addViewModel.removeSelectedFile(e);
                               },
                               icon: const Icon(ZiconOutline.trash),
                             )

@@ -57,10 +57,10 @@ class DriverRepo {
 
     final currentDriverDB = await _dbService.initDB(dbPath);
 
+    //: FIXME: sync not needed!
     //: check db -> files sync
     final dbItemsToBeRemoved =
         await _checkSyncDbToFiles(currentDriver, currentDriverDB);
-
     //: check files -> db sync
     final filesToBeAddedToDb =
         await _checkSyncFilesToDb(currentDriver, currentDriverDB);
@@ -154,6 +154,16 @@ class DriverRepo {
     if (!listEquals(newFT.tags, oldFT.tags)) {
       await changeFileTags(dd.db, newFT, newFT.tags);
     }
+  }
+
+  Future<void> insertFileTags(
+      DriverDatabase dd, Iterable<FileTag> selectedFiles) async {
+    var futures = selectedFiles.map((ft) async {
+      await _driverService.moveFileToDriver(dd.path, ft);
+      await _dbService.insertFileTagDb(dd.db, ft);
+    });
+
+    await Future.wait(futures);
   }
 }
 
