@@ -50,63 +50,7 @@ Future<Set<String>> tagsList_() => Future(() => Set.from(getCurrentDb()
     .fold<List<String>>(
         [], (previousValue, element) => previousValue + element)));
 
-//: ----------------------------------------------------------------------------
-
-bool checkFileExist(String fileName) {
-  final fileExists = File(join(getCurrentDriverPath(), fileName)).existsSync();
-
-  return fileDbExists_(fileName) && fileExists;
-}
-
-bool fileDbExists_(String fileName) {
-  final db = getCurrentDb();
-
-  final dbExists = db.select(
-      "SELECT * FROM $fileTagTable WHERE $fileNameColumn = ?1",
-      [fileName]).isNotEmpty;
-  return dbExists;
-}
-
-class FileTagExistStatus {
-  const FileTagExistStatus({required this.exists, required this.notExists});
-
-  final Iterable<FileTag> exists;
-  final Iterable<FileTag> notExists;
-
-  FileTagExistStatus addExist(FileTag ft) =>
-      FileTagExistStatus(exists: [...exists, ft], notExists: notExists);
-  FileTagExistStatus addNotExist(FileTag ft) =>
-      FileTagExistStatus(exists: exists, notExists: [...notExists, ft]);
-}
-
-Future<FileTagExistStatus> checkAllFilesExist(Iterable<FileTag> files) async {
-  return (await Future(
-          () => files.map((e) => Tuple2(e, checkFileExist(e.fileName)))))
-      .fold<FileTagExistStatus>(
-          const FileTagExistStatus(exists: [], notExists: []),
-          (acc, i) =>
-              i.item2 ? acc.addExist(i.item1) : acc.addNotExist(i.item1));
-}
-
-//: ----------------------------------------------------------------------------
-
 class FileExistsException implements Exception {}
-
-Future<void> changeFileTags(FileTag ft, List<String> tags) async {
-  final db = getCurrentDb();
-
-  await Future(
-    () {
-      db.execute("""
-            UPDATE $fileTagTable
-            SET $tagsColumn = '${jsonEncode(tags)}'
-            WHERE $fileNameColumn = '${ft.fileName}';
-          """);
-    },
-  );
-}
-
-//: ----------------------------------------------------------------------------
 
 void deleteFile(FileTag fileTag) {
   final db = getCurrentDb();

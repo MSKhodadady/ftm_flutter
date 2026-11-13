@@ -47,3 +47,15 @@ class FileTag {
     return tags.contains(trashTag);
   }
 }
+
+class FileTagExistStatus {
+  const FileTagExistStatus({required this.exists, required this.notExists});
+
+  final Iterable<FileTag> exists;
+  final Iterable<FileTag> notExists;
+
+  FileTagExistStatus addExist(FileTag ft) =>
+      FileTagExistStatus(exists: [...exists, ft], notExists: notExists);
+  FileTagExistStatus addNotExist(FileTag ft) =>
+      FileTagExistStatus(exists: exists, notExists: [...notExists, ft]);
+}

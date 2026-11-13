@@ -6,7 +6,8 @@ import 'package:ftm_flutter/layouts/main_layout.dart';
 import 'package:ftm_flutter/views/add/model.dart';
 import 'package:ftm_flutter/views/add/view.dart';
 import 'package:ftm_flutter/pages/drivers_page.dart';
-import 'package:ftm_flutter/pages/select_file.dart';
+import 'package:ftm_flutter/views/select/model.dart';
+import 'package:ftm_flutter/views/select/view.dart';
 import 'package:ftm_flutter/pages/trash_page.dart';
 import 'package:ftm_flutter/repos/driver.dart';
 import 'package:ftm_flutter/services/app_conf.dart';
@@ -71,10 +72,18 @@ void main() async {
       // VIEW MODELS ----------------------------------------------------------
       //
       Provider(
-        create: (context) => ExploreViewModel(driverRepo: context.read()),
+        create: (context) => ExploreViewModel(
+          driverRepo: context.read(),
+        ),
       ),
       Provider(
         create: (context) => AddViewModel(
+          selectedFilesState: context.read(),
+          driverRepo: context.read(),
+        ),
+      ),
+      Provider(
+        create: (context) => SelectFileViewModel(
           selectedFilesState: context.read(),
           driverRepo: context.read(),
         ),
@@ -145,7 +154,7 @@ class RouteResolver {
       case '/drivers':
         return const DriversPage();
       case '/select-files':
-        return const SelectFile();
+        return SelectFileView(vm: context.read());
       default:
         return Container();
     }
@@ -169,7 +178,9 @@ class RouteResolver {
   MaterialPageRoute build(BuildContext context) {
     if (currentPath == '/select-files') {
       return MaterialPageRoute(
-        builder: (context) => const SelectFile(),
+        builder: (context) => SelectFileView(
+          vm: context.read(),
+        ),
       );
     }
 

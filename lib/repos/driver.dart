@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 import 'package:flutter/foundation.dart';
 import 'package:ftm_flutter/models/app_conf.dart';
 import 'package:ftm_flutter/models/driver.dart';
@@ -9,6 +10,7 @@ import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:ftm_flutter/models/file_tag.dart';
+import 'package:tuple/tuple.dart';
 
 class DriverRepo {
   final DriverService _driverService;
@@ -164,6 +166,24 @@ class DriverRepo {
     });
 
     await Future.wait(futures);
+  }
+
+  Future<FileTagExistStatus> checkAllFilesExists(
+    Driver d,
+    Iterable<FileTag> files,
+  ) async {
+    final existsStatus = await Isolate.run(
+      () => files.map(
+        (e) => Tuple2(e, _driverService.checkFileExist(d.path, e.fileName)),
+      ),
+    );
+
+    final res = existsStatus.fold<FileTagExistStatus>(
+      const FileTagExistStatus(exists: [], notExists: []),
+      (acc, i) => i.item2 ? acc.addExist(i.item1) : acc.addNotExist(i.item1),
+    );
+
+    return res;
   }
 }
 
