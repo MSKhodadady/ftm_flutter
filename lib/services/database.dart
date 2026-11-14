@@ -150,4 +150,11 @@ class DriverDbService {
       //
     });
   }
+
+  Future<void> delete(Database db, FileTag fileTag) async {
+    await Isolate.run(() {
+      db.execute(
+          "DELETE FROM $fileTagTable WHERE $fileNameColumn = '${fileTag.fileName}';");
+    });
+  }
 }

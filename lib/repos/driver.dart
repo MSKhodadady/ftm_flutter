@@ -185,6 +185,23 @@ class DriverRepo {
 
     return res;
   }
+
+  Future<void> deleteFile(DriverDatabase dd, FileTag e) async {
+    await _dbService.delete(dd.db, e);
+    await _driverService.deleteFile(dd, e);
+  }
+
+  Future<void> restoreFile(DriverDatabase dd, FileTag fileTag) async {
+    await _dbService.changeFileTags(
+      dd.db,
+      fileTag,
+      fileTag.tags
+          .where(
+            (element) => element != FileTag.trashTag,
+          )
+          .toList(),
+    );
+  }
 }
 
 class CannotCreateDriverDirException implements Exception {

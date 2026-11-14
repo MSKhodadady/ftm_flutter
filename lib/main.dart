@@ -8,7 +8,8 @@ import 'package:ftm_flutter/views/add/view.dart';
 import 'package:ftm_flutter/pages/drivers_page.dart';
 import 'package:ftm_flutter/views/select/model.dart';
 import 'package:ftm_flutter/views/select/view.dart';
-import 'package:ftm_flutter/pages/trash_page.dart';
+import 'package:ftm_flutter/views/trash/model.dart';
+import 'package:ftm_flutter/views/trash/view.dart';
 import 'package:ftm_flutter/repos/driver.dart';
 import 'package:ftm_flutter/services/app_conf.dart';
 import 'package:ftm_flutter/services/database.dart';
@@ -87,6 +88,9 @@ void main() async {
           selectedFilesState: context.read(),
           driverRepo: context.read(),
         ),
+      ),
+      Provider(
+        create: (context) => TrashViewModel(driverRepo: context.read()),
       )
     ],
     child: const MyApp(),
@@ -150,7 +154,9 @@ class RouteResolver {
           addViewModel: context.read(),
         );
       case '/trash':
-        return const TrashPage();
+        return TrashView(
+          vm: context.read(),
+        );
       case '/drivers':
         return const DriversPage();
       case '/select-files':

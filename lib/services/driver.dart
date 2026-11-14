@@ -28,4 +28,13 @@ class DriverService {
     await f.copy(p.join(driverPath, ft.fileName));
     await f.delete();
   }
+
+  Future<void> deleteFile(Driver d, FileTag fileTag) async {
+    final file = File(p.join(d.path, fileTag.fileName));
+    try {
+      await file.delete();
+    } on FileSystemException {
+      // ignored
+    }
+  }
 }
