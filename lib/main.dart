@@ -5,7 +5,8 @@ import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
 import 'package:ftm_flutter/views/add/model.dart';
 import 'package:ftm_flutter/views/add/view.dart';
-import 'package:ftm_flutter/pages/drivers_page.dart';
+import 'package:ftm_flutter/views/drivers/model.dart';
+import 'package:ftm_flutter/views/drivers/view.dart';
 import 'package:ftm_flutter/views/select/model.dart';
 import 'package:ftm_flutter/views/select/view.dart';
 import 'package:ftm_flutter/views/trash/model.dart';
@@ -91,6 +92,9 @@ void main() async {
       ),
       Provider(
         create: (context) => TrashViewModel(driverRepo: context.read()),
+      ),
+      Provider(
+        create: (context) => DriversViewModel(),
       )
     ],
     child: const MyApp(),
@@ -146,19 +150,13 @@ class RouteResolver {
   Widget buildRoute(BuildContext context) {
     switch (currentPath) {
       case '/explore':
-        return ExploreView(
-          exploreViewModel: context.read(),
-        );
+        return ExploreView(exploreViewModel: context.read());
       case '/add':
-        return AddPage(
-          addViewModel: context.read(),
-        );
+        return AddPage(addViewModel: context.read());
       case '/trash':
-        return TrashView(
-          vm: context.read(),
-        );
+        return TrashView(vm: context.read());
       case '/drivers':
-        return const DriversPage();
+        return DriversView(vm: context.read());
       case '/select-files':
         return SelectFileView(vm: context.read());
       default:
@@ -191,9 +189,10 @@ class RouteResolver {
     }
 
     return NoAnimationMaterialPageRoute(
-        builder: (context) => MainLayoutWrapper(
-              selectedIndex: routeIndex(),
-              child: buildRoute(context),
-            ));
+      builder: (context) => MainLayoutWrapper(
+        selectedIndex: routeIndex(),
+        child: buildRoute(context),
+      ),
+    );
   }
 }
