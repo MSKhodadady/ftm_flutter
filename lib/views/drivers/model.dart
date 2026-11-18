@@ -1,9 +1,12 @@
+import 'package:ftm_flutter/repos/app_conf.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:ftm_flutter/models/app_conf.dart';
 import 'package:ftm_flutter/models/driver.dart';
 
 class DriversViewModel extends ChangeNotifier {
-  DriversViewModel();
+  final AppConfRepo _appConfRepo;
+  DriversViewModel({required AppConfRepo appConfRepo})
+      : _appConfRepo = appConfRepo;
 
   AppConf? _appConf;
 
@@ -15,49 +18,36 @@ class DriversViewModel extends ChangeNotifier {
     return _appConf?.currentDriver;
   }
 
-  Future<void> _getAppConf() async {
-    // TODO:
+  Future<AppConf> getAppConf() async {
+    if (_appConf == null) {
+      _appConf = await _appConfRepo.getAppConf();
+      notifyListeners();
+    }
+
+    return _appConf!;
   }
 
   Future<void> setCurrentDriver(Driver e) async {
-    //
-    // TODO:
-    await _getAppConf();
+    _appConf = await _appConfRepo.setCurrentDriver(e.name);
+
+    notifyListeners();
   }
 
   Future<void> onAddDriver(Driver d) async {
-    // TODO:
-    if (drivers.any((element) => element.name == nameController.text)) {
-      nameError.value = "another driver with this name";
+    _appConf = await _appConfRepo.addDriver(d);
 
-      return;
-    }
-
-    if (drivers.any((element) => element.path == pathController.text)) {
-      pathError.value = "another driver with this path";
-
-      return;
-    }
-    //
+    notifyListeners();
   }
 
-  Future<void> renameDriver(Driver e, String newName) async {
-    // TODO:
-    if (e.name != newName) {
-      DriverService.renameDriver(e.name, newName);
+  Future<void> renameDriver(Driver d, String newName) async {
+    _appConf = await _appConfRepo.renameDriver(d.name, newName);
 
-      vm.drivers = vm.drivers
-          .map((j) => j.name == e.name
-              ? Driver(name: newName, path: j.path, type: j.type)
-              : j)
-          .toList();
-
-      currentDriver.value =
-          currentDriver.value == e.name ? newName : currentDriver.value;
-    }
+    notifyListeners();
   }
 
   Future<void> deleteDriver(Driver d) async {
-    //: TODO:
+    _appConf = await _appConfRepo.deleteDriver(d.name);
+
+    notifyListeners();
   }
 }

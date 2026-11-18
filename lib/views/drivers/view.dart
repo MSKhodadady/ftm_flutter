@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:ftm_flutter/services/app_conf.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
@@ -6,12 +7,43 @@ import 'package:ftm_flutter/models/driver.dart';
 import 'package:ftm_flutter/util/io.dart';
 import 'package:ftm_flutter/views/drivers/model.dart';
 
-class DriversView extends HookWidget {
+class DriversView extends StatefulWidget {
   final DriversViewModel vm;
-  const DriversView({super.key, required this.vm});
+
+  const DriversView({
+    super.key,
+    required this.vm,
+  });
+
+  @override
+  State<DriversView> createState() => _DriversViewState();
+}
+
+class _DriversViewState extends State<DriversView> {
+  DriversViewModel get vm => widget.vm;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAppConf();
+  }
+
+  Future<void> _loadAppConf() async {
+    try {
+      await vm.getAppConf();
+    } catch (error, stackTrace) {
+      // Handle or log the loading error here.
+      debugPrint('$error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
 
   void onSetCurrent(Driver e) async {
-    vm.setCurrentDriver(e);
+    try {
+      vm.setCurrentDriver(e);
+    } on DriverNotFoundException {
+      // FIXME:
+    }
   }
 
   @override
@@ -29,7 +61,11 @@ class DriversView extends HookWidget {
                   showDialog<Driver>(
                     context: context,
                     builder: (context) => CreateDriver((p0) {
-                      vm.onAddDriver(p0);
+                      try {
+                        vm.onAddDriver(p0);
+                      } on DriverExistsException {
+                        // FIXME:
+                      }
                     }),
                   );
                 },

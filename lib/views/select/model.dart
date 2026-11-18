@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/models/file_tag.dart';
 import 'package:ftm_flutter/repos/driver.dart';
-import 'package:ftm_flutter/util/io.dart';
+import 'package:ftm_flutter/util/io.dart' as io;
 import 'package:path/path.dart';
 import 'package:tuple/tuple.dart';
 
@@ -17,7 +17,11 @@ class SelectFileViewModel extends ChangeNotifier {
   })  : _driverRepo = driverRepo,
         _selectedFilesState = selectedFilesState;
 
-  String _currentPath = getHomePath();
+  String getHomePath() {
+    return io.getHomePath();
+  }
+
+  String _currentPath = io.getHomePath();
   String get currentPath => _currentPath;
 
   bool _multipleSelect = false;

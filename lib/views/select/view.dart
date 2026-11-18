@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:ftm_flutter/util/io.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
@@ -133,7 +132,7 @@ class SelectFileView extends HookWidget {
       ]);
     }
 
-    if (!(vm.multipleSelect || vm.currentPath == getHomePath())) {
+    if (!(vm.multipleSelect || vm.currentPath == vm.getHomePath())) {
       res.add(TextButton(
         onPressed: () => vm.goUp(),
         child: const Text(

@@ -10,132 +10,6 @@ import 'package:path_provider/path_provider.dart';
 const _desktopAppConfDir = '.ftm'; //: for windows, linux, mac os
 const _mainConfFileName = 'app-conf.json';
 
-// class Old__AppConfService {
-//   AppConf _mainConf;
-
-//   Old__AppConfService._raw(this._mainConf);
-
-//   static Future<Old__AppConfService> init() async {
-//     final mainConfPath = await _getMainConfPath();
-//     final mainConfFile = File(mainConfPath);
-
-//     AppConf mc;
-
-//     if (!(await mainConfFile.exists())) {
-//       await mainConfFile.parent.create(recursive: true);
-//       mc = AppConf.appStarter();
-//     } else {
-//       mc = AppConf.fromJson(await mainConfFile.readAsString());
-//     }
-
-//     //: write to file
-//     _writeMainConf(mc);
-
-//     //: init currentDriver
-
-//     return Old__AppConfService._raw(mc);
-//   }
-
-//   static Future<String> _getMainConfPath() async {
-//     if (isDesktop()) {
-//       return p.join(getHomePath(), _desktopAppConfDir, _mainConfFileName);
-//     } else {
-//       final supportDir = await getApplicationSupportDirectory();
-//       return p.join(
-//         supportDir.path,
-//         _mainConfFileName,
-//       );
-//     }
-//   }
-
-//   static Future<void> _writeMainConf(AppConf mc) async {
-//     final path = await _getMainConfPath();
-//     final mainConfFile = File(path);
-//     await mainConfFile.writeAsString(jsonEncode(mc.toMap()));
-//   }
-
-//   Future<void> withMainConf(
-//     FutureOr<AppConf> Function() transformer,
-//   ) async {
-//     // //: ensure
-//     // if (!(await mainConfFile.exists())) {
-//     //   await mainConfFile.parent.create(recursive: true);
-//     //   _mainConf = _initMainConf();
-//     //   await mainConfFile.writeAsString(jsonEncode(_mainConf.toMap()));
-//     // } else {
-//     //   _mainConf = _mainConfFromJsonString(await mainConfFile.readAsString());
-//     // }
-//     // final driver = () {
-//     //   if (driverName == null) return null;
-
-//     //   final td = _mainConf.drivers
-//     //       .firstWhereOrNull((element) => element.name == driverName);
-
-//     //   if (td == null) {
-//     //     throw DriverNotExistsException();
-//     //   }
-
-//     //   return td;
-//     // }();
-
-//     var newMC = await transformer();
-
-//     _writeMainConf(newMC);
-
-//     _mainConf = newMC;
-//   }
-
-//   static const driverConfDir = '.config';
-
-//   Future<void> addDriver(Driver newDriver) async {
-//     withMainConf(() {
-//       if (_mainConf.drivers.any((element) =>
-//           element.name == newDriver.name || element.path == newDriver.path)) {
-//         throw DriverExistsException();
-//       }
-
-//       return AppConf(
-//           [..._mainConf.drivers, newDriver], _mainConf.currentDriver);
-//     });
-//   }
-
-//   Future<void> renameDriver(String driverName, String newName) async {
-//     await withMainConf(() {
-//       final neoDs = _mainConf.drivers
-//           .map(
-//             (e) => e.name == driverName
-//                 ? Driver(name: newName, path: e.path, type: e.type)
-//                 : e,
-//           )
-//           .toList();
-
-//       return AppConf(
-//           neoDs,
-//           _mainConf.currentDriver == driverName
-//               ? newName
-//               : _mainConf.currentDriver);
-//     });
-//   }
-
-//   Future<void> removeDriver(String driverName) async {
-//     await withMainConf(() {
-//       if (_mainConf.drivers.length < 2) {
-//         throw Exception("one-driver");
-//       }
-
-//       if (_mainConf.currentDriver == driverName) {
-//         throw Exception("current");
-//       }
-
-//       var neoDs = _mainConf.drivers
-//           .where((element) => element.name != driverName)
-//           .toList();
-
-//       return AppConf(neoDs, _mainConf.currentDriver);
-//     });
-//   }
-// }
-
 class AppConfService {
   static Future<String> _getMainConfPath() async {
     if (isDesktop()) {
@@ -166,27 +40,116 @@ class AppConfService {
     return mc;
   }
 
-  Future<void> _writeAppConf(AppConf mc) async {
+  Future<void> _writeAppConf(AppConf newAc) async {
     final path = await _getMainConfPath();
     final mainConfFile = File(path);
-    await mainConfFile.writeAsString(jsonEncode(mc.toMap()));
+    await mainConfFile.writeAsString(jsonEncode(newAc.toMap()));
   }
 
-  Future<AppConf> forceRemove(AppConf mc, Driver driver) async {
-    final neoDs =
-        mc.drivers.where((element) => element.name != driver.name).toList();
-    AppConf newMc;
+  // Future<AppConf> forceRemove(Driver driver) async {
+  //   final ac = await readAppConf();
 
-    if (neoDs.isEmpty) {
-      newMc = AppConf.appStarter();
-    } else {
-      newMc = AppConf(
-        neoDs,
-        mc.currentDriver == driver.name ? neoDs[0].name : mc.currentDriver,
-      );
+  //   final neoDs =
+  //       ac.drivers.where((element) => element.name != driver.name).toList();
+
+  //   AppConf newAc;
+
+  //   if (neoDs.isEmpty) {
+  //     newAc = AppConf.appStarter();
+  //   } else {
+  //     newAc = AppConf(
+  //       neoDs,
+  //       ac.currentDriver == driver.name ? neoDs[0].name : ac.currentDriver,
+  //     );
+  //   }
+  //   await _writeAppConf(newAc);
+
+  //   return newAc;
+  // }
+
+  Future<AppConf> addDriver(Driver newDriver) async {
+    final ac = await readAppConf();
+
+    if (ac.drivers.any(
+      (element) =>
+          element.name == newDriver.name || element.path == newDriver.path,
+    )) {
+      throw DriverExistsException(
+          sameName: ac.drivers.any(
+            (element) => element.name == newDriver.name,
+          ),
+          samePath: ac.drivers.any(
+            (element) => element.path == newDriver.path,
+          ));
     }
-    await _writeAppConf(newMc);
 
-    return mc;
+    final newAC = AppConf([...ac.drivers, newDriver], ac.currentDriver);
+
+    _writeAppConf(newAC);
+
+    return newAC;
+  }
+
+  Future<AppConf> renameDriver(String driverName, String newName) async {
+    final ac = await readAppConf();
+
+    final neoDs = ac.drivers
+        .map(
+          (e) => e.name == driverName
+              ? Driver(name: newName, path: e.path, type: e.type)
+              : e,
+        )
+        .toList();
+
+    var newAc = AppConf(
+      neoDs,
+      ac.currentDriver == driverName ? newName : ac.currentDriver,
+    );
+
+    _writeAppConf(newAc);
+
+    return newAc;
+  }
+
+  Future<AppConf> deleteDriver(String driverName) async {
+    final ac = await readAppConf();
+
+    if (ac.drivers.length < 2) {
+      throw Exception("one-driver");
+    }
+
+    if (ac.currentDriver == driverName) {
+      throw Exception("current");
+    }
+
+    var neoDs =
+        ac.drivers.where((element) => element.name != driverName).toList();
+
+    var newAc = AppConf(neoDs, ac.currentDriver);
+    _writeAppConf(newAc);
+
+    return newAc;
+  }
+
+  Future<AppConf> setCurrentDriver(String driverName) async {
+    final ac = await readAppConf();
+
+    if (!ac.drivers.any((element) => element.name == driverName)) {
+      throw DriverNotFoundException();
+    }
+
+    var newAc = AppConf(ac.drivers, driverName);
+    _writeAppConf(newAc);
+
+    return newAc;
   }
 }
+
+class DriverExistsException extends Error {
+  final bool sameName;
+  final bool samePath;
+
+  DriverExistsException({required this.sameName, required this.samePath});
+}
+
+class DriverNotFoundException extends Error {}
