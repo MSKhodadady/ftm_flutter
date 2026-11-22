@@ -202,6 +202,10 @@ class DriverRepo {
           .toList(),
     );
   }
+
+  Future<List<String>> getAllTags(DriverDatabase dd) {
+    return _dbService.getAllTags(dd.db);
+  }
 }
 
 class CannotCreateDriverDirException implements Exception {

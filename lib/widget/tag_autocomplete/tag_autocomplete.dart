@@ -1,6 +1,7 @@
+import 'package:ftm_flutter/widget/tag_autocomplete/model.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:ftm_flutter/models/file_tag.dart';
-import 'package:ftm_flutter/data/file_tag.dart';
+import 'package:provider/provider.dart';
 
 typedef TagAutocompleteOnSelected = void Function(String);
 
@@ -9,11 +10,12 @@ class TagAutocomplete extends StatefulWidget {
   final List<String> chosenTags;
   final String? title;
 
-  const TagAutocomplete(
-      {super.key,
-      required this.onSubmitted,
-      required this.chosenTags,
-      this.title});
+  const TagAutocomplete({
+    super.key,
+    required this.onSubmitted,
+    required this.chosenTags,
+    this.title,
+  });
 
   @override
   State<TagAutocomplete> createState() => _TagAutocompleteState();
@@ -37,9 +39,11 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
   }
 
   Future<List<String>> _autoComplete() async {
+    final vm = context.read<TagAutocompleteViewModel>();
+
     final txt = _textController.text;
     // final ts = await tagsList();
-    final ts = await tagsList_();
+    final ts = await vm.getAllTags();
     return txt == ''
         ? ts
             .where((element) => widget.chosenTags.every((ct) => ct != element))
@@ -58,6 +62,7 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
   @override
   Widget build(BuildContext context) {
     _suggestedTagsFuture = _autoComplete();
+
     return Column(
       children: [
         //: text field

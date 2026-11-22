@@ -5,7 +5,7 @@ import 'package:ftm_flutter/views/explore/model.dart';
 import 'package:ftm_flutter/widget/add_tag_files.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
-import 'package:ftm_flutter/widget/tag_autocomplete.dart';
+import 'package:ftm_flutter/widget/tag_autocomplete/tag_autocomplete.dart';
 import 'package:ftm_flutter/widget/yes_no_dialog.dart';
 
 class ExploreView extends HookWidget {

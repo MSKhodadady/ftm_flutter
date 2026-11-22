@@ -157,4 +157,22 @@ class DriverDbService {
           "DELETE FROM $fileTagTable WHERE $fileNameColumn = '${fileTag.fileName}';");
     });
   }
+
+  // TODO: add [chosenTags] filter + caching
+  Future<List<String>> getAllTags(Database db) async {
+    var res = await Isolate.run(() {
+      var r = db.select("SELECT $tagsColumn FROM $fileTagTable;");
+
+      return r;
+    });
+
+    var result = res
+        .map((e) => List<String>.from(jsonDecode(e[tagsColumn])))
+        .fold<List<String>>(
+      [],
+      (previousValue, element) => previousValue + element,
+    );
+
+    return result;
+  }
 }

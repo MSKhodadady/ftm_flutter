@@ -1,12 +1,11 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:ftm_flutter/repos/driver.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
-import 'package:ftm_flutter/widget/tag_autocomplete.dart';
+import 'package:ftm_flutter/widget/tag_autocomplete/tag_autocomplete.dart';
 import 'package:path/path.dart' as path;
 import 'package:ftm_flutter/models/file_tag.dart';
-
-import '../data/file_tag.dart';
 
 class EditFileTag extends StatefulWidget {
   const EditFileTag(

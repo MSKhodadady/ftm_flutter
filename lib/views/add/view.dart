@@ -4,7 +4,7 @@ import 'package:ftm_flutter/views/add/model.dart';
 import 'package:ftm_flutter/widget/chosen_tag_list.dart';
 import 'package:ftm_flutter/widget/edit_file_tag.dart';
 import 'package:ftm_flutter/widget/file_tag_row.dart';
-import 'package:ftm_flutter/widget/tag_autocomplete.dart';
+import 'package:ftm_flutter/widget/tag_autocomplete/tag_autocomplete.dart';
 
 class AddPage extends StatelessWidget {
   final AddViewModel addViewModel;

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:ftm_flutter/repos/app_conf.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
@@ -59,9 +60,14 @@ void main() async {
   //: run app
   runApp(MultiProvider(
     providers: [
+      // Services -------------------------------------------------------------
+      //
       Provider(create: (ctx) => DriverService()),
       Provider(create: (context) => DriverDbService()),
       Provider(create: (context) => AppConfService()),
+      //
+      // Repos -----------------------------------------------------------------
+      //
       Provider(
         create: (context) => DriverRepo(
           appConfService: context.read(),
@@ -69,7 +75,12 @@ void main() async {
           dbService: context.read(),
         ),
       ),
-      Provider(create: (context) => SelectedFilesState()),
+      Provider(
+        create: (context) => SelectedFilesState(),
+      ),
+      Provider(
+        create: (context) => AppConfRepo(appConfService: context.read()),
+      ),
       //
       // VIEW MODELS ----------------------------------------------------------
       //
@@ -94,7 +105,7 @@ void main() async {
         create: (context) => TrashViewModel(driverRepo: context.read()),
       ),
       Provider(
-        create: (context) => DriversViewModel(),
+        create: (context) => DriversViewModel(appConfRepo: context.read()),
       )
     ],
     child: const MyApp(),
