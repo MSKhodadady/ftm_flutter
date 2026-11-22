@@ -54,15 +54,13 @@ class MainLayoutWrapper extends StatelessWidget {
                   if (isDesktop()) {
                     var result = await FilePicker.pickFiles();
 
-                    if (result != null) {
-                      selectedFilesController.add(result.files
-                          .where((element) => element.path != null)
-                          .map((e) => FileTag(e.name, [], e.path ?? ""))
-                          .toList());
+                    selectedFilesController.add(result
+                        .where((element) => element.path != null)
+                        .map((e) => FileTag(e.name, [], e.path ?? ""))
+                        .toList());
 
-                      // ignore: use_build_context_synchronously
-                      Navigator.pushNamed(context, '/add');
-                    }
+                    // ignore: use_build_context_synchronously
+                    Navigator.pushNamed(context, '/add');
                   } else {
                     Navigator.pushNamed(context, '/select-files');
                   }

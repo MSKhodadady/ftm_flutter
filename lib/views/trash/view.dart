@@ -82,7 +82,7 @@ class TrashView extends HookWidget {
                 )
               : Container(
                   margin: const EdgeInsets.only(top: 20),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [

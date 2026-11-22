@@ -84,27 +84,27 @@ void main() async {
       //
       // VIEW MODELS ----------------------------------------------------------
       //
-      Provider(
+      ChangeNotifierProvider(
         create: (context) => ExploreViewModel(
           driverRepo: context.read(),
         ),
       ),
-      Provider(
+      ChangeNotifierProvider(
         create: (context) => AddViewModel(
           selectedFilesState: context.read(),
           driverRepo: context.read(),
         ),
       ),
-      Provider(
+      ChangeNotifierProvider(
         create: (context) => SelectFileViewModel(
           selectedFilesState: context.read(),
           driverRepo: context.read(),
         ),
       ),
-      Provider(
+      ChangeNotifierProvider(
         create: (context) => TrashViewModel(driverRepo: context.read()),
       ),
-      Provider(
+      ChangeNotifierProvider(
         create: (context) => DriversViewModel(appConfRepo: context.read()),
       )
     ],
