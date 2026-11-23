@@ -36,6 +36,10 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
         _suggestedTagsFuture = _autoComplete();
       });
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _suggestedTagsFuture = _autoComplete();
+    });
   }
 
   Future<List<String>> _autoComplete() async {
@@ -61,8 +65,6 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
 
   @override
   Widget build(BuildContext context) {
-    _suggestedTagsFuture = _autoComplete();
-
     return Column(
       children: [
         //: text field
@@ -80,35 +82,38 @@ class _TagAutocompleteState extends State<TagAutocomplete> {
               label: Text(widget.title ?? "Choose Tag")),
         ),
         SizedBox(
-            height: 40,
-            child: FutureBuilder(
-                future: _suggestedTagsFuture,
-                builder: (context, snapshot) => snapshot.hasData
-                    ? ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: (snapshot.data as List<String>)
-                            .map((e) => InkWell(
-                                  child: Container(
-                                    padding: const EdgeInsets.only(right: 1),
-                                    child: Chip(
-                                      label: Text(e),
-                                      color: WidgetStatePropertyAll(
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .secondary),
-                                      side: const BorderSide(
-                                          color: Colors.transparent),
-                                      visualDensity: const VisualDensity(
-                                          horizontal: 1, vertical: -4),
-                                    ),
-                                  ),
-                                  onTap: () async {
-                                    widget.onSubmitted(e);
-                                    _textController.clear();
-                                  },
-                                ))
-                            .toList())
-                    : const Text("loading"))),
+          height: 40,
+          child: FutureBuilder(
+            future: _suggestedTagsFuture,
+            builder: (context, snapshot) => snapshot.hasData
+                ? ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: (snapshot.data as List<String>)
+                        .map(
+                          (e) => InkWell(
+                            child: Container(
+                              padding: const EdgeInsets.only(right: 1),
+                              child: Chip(
+                                label: Text(e),
+                                color: WidgetStatePropertyAll(
+                                    Theme.of(context).colorScheme.secondary),
+                                side:
+                                    const BorderSide(color: Colors.transparent),
+                                visualDensity: const VisualDensity(
+                                    horizontal: 1, vertical: -4),
+                              ),
+                            ),
+                            onTap: () async {
+                              widget.onSubmitted(e);
+                              _textController.clear();
+                            },
+                          ),
+                        )
+                        .toList(),
+                  )
+                : const Text("loading"),
+          ),
+        ),
       ],
     );
   }

@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:ftm_flutter/models/driver.dart';
-import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:ftm_flutter/util/io.dart';
 
@@ -37,11 +36,11 @@ class AppConf {
       }
 
       final currentDriverInJson = mfMap[_currentDriverKey] as String;
-      final currentDriver = drivers.firstWhereOrNull(
-                  (element) => element.name == currentDriverInJson) ==
-              null
-          ? drivers[0].name
-          : currentDriverInJson;
+      var first = drivers
+          .where((element) => element.name == currentDriverInJson)
+          .firstOrNull;
+      final currentDriver =
+          first == null ? drivers[0].name : currentDriverInJson;
 
       return AppConf(drivers, currentDriver);
     } catch (e) {

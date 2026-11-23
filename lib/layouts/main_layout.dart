@@ -1,10 +1,9 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:ftm_flutter/models/file_tag.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/util/io.dart';
-import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 
 class MainLayoutWrapper extends StatelessWidget {
   const MainLayoutWrapper(
@@ -33,67 +32,64 @@ class MainLayoutWrapper extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) => GetBuilder<SelectedFilesController>(
-        init: SelectedFilesController(),
-        builder: (selectedFilesController) => Scaffold(
-          //: find body
-          body: child,
-          //:
-          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-          bottomNavigationBar: NavigationBar(
-            destinations: destinations,
-            selectedIndex: selectedIndex,
-            onDestinationSelected: (index) async {
-              switch (index) {
-                case 0: //: explore page
-                  Navigator.pushNamed(context, '/explore');
-                  break;
-                case 1: //: add page
-                  selectedFilesController.clear();
+  Widget build(BuildContext context) {
+    var selectedFilesState = context.read<SelectedFilesState>();
 
-                  if (isDesktop()) {
-                    var result = await FilePicker.pickFiles();
+    return Scaffold(
+      //: find body
+      body: child,
+      //:
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      bottomNavigationBar: NavigationBar(
+        destinations: destinations,
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) async {
+          switch (index) {
+            case 0: //: explore page
+              Navigator.pushNamed(context, '/explore');
+              break;
+            case 1: //: add page
+              selectedFilesState.clear();
 
-                    selectedFilesController.add(result
-                        .where((element) => element.path != null)
-                        .map((e) => FileTag(e.name, [], e.path ?? ""))
-                        .toList());
+              if (isDesktop()) {
+                var result = await FilePicker.pickFiles();
+                selectedFilesState.addFilePick(result);
 
-                    // ignore: use_build_context_synchronously
-                    Navigator.pushNamed(context, '/add');
-                  } else {
-                    Navigator.pushNamed(context, '/select-files');
-                  }
-                  break;
-                case 2: //: trash page
-
-                  Navigator.pushNamed(context, '/trash');
-                  break;
-
-                case 3:
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (context) => Container(
-                      margin: const EdgeInsets.only(top: 20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          ListTile(
-                            title: const Text("Drivers"),
-                            leading: const Icon(ZiconOutline.settings_1),
-                            onTap: () {
-                              Navigator.of(context).pop();
-
-                              Navigator.pushNamed(context, '/drivers');
-                            },
-                          )
-                        ],
-                      ),
-                    ),
-                  );
+                // ignore: use_build_context_synchronously
+                Navigator.pushNamed(context, '/add');
+              } else {
+                Navigator.pushNamed(context, '/select-files');
               }
-            },
-          ),
-        ),
-      );
+              break;
+            case 2: //: trash page
+
+              Navigator.pushNamed(context, '/trash');
+              break;
+
+            case 3:
+              showModalBottomSheet(
+                context: context,
+                builder: (context) => Container(
+                  margin: const EdgeInsets.only(top: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      ListTile(
+                        title: const Text("Drivers"),
+                        leading: const Icon(ZiconOutline.settings_1),
+                        onTap: () {
+                          Navigator.of(context).pop();
+
+                          Navigator.pushNamed(context, '/drivers');
+                        },
+                      )
+                    ],
+                  ),
+                ),
+              );
+          }
+        },
+      ),
+    );
+  }
 }

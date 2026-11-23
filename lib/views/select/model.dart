@@ -48,7 +48,7 @@ class SelectFileViewModel extends ChangeNotifier {
 
       var fileDirSeparated =
           filesList.fold<Tuple2<List<Directory>, List<File>>>(
-        const Tuple2([], []),
+        Tuple2([], []),
         (acc, i) {
           if (i is File) {
             acc.item2.add(i);

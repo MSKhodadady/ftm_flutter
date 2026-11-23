@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:ftm_flutter/repos/app_conf.dart';
+import 'package:ftm_flutter/widget/tag_autocomplete/model.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:ftm_flutter/controllers/selected_files.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
@@ -76,10 +77,15 @@ void main() async {
         ),
       ),
       Provider(
-        create: (context) => SelectedFilesState(),
+        create: (context) => AppConfRepo(
+          appConfService: context.read(),
+        ),
       ),
-      Provider(
-        create: (context) => AppConfRepo(appConfService: context.read()),
+      //
+      // STATE ----------------------------------------------------------------
+      //
+      ChangeNotifierProvider(
+        create: (context) => SelectedFilesState(),
       ),
       //
       // VIEW MODELS ----------------------------------------------------------
@@ -106,7 +112,12 @@ void main() async {
       ),
       ChangeNotifierProvider(
         create: (context) => DriversViewModel(appConfRepo: context.read()),
-      )
+      ),
+      ChangeNotifierProvider(
+        create: (context) => TagAutocompleteViewModel(
+          driverRepo: context.read(),
+        ),
+      ),
     ],
     child: const MyApp(),
   ));

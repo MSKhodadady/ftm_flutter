@@ -6,7 +6,6 @@ import 'package:ftm_flutter/models/driver.dart';
 import 'package:ftm_flutter/services/app_conf.dart';
 import 'package:ftm_flutter/services/database.dart';
 import 'package:ftm_flutter/services/driver.dart';
-import 'package:get/get.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqlite3/sqlite3.dart';
 import 'package:ftm_flutter/models/file_tag.dart';
@@ -30,7 +29,7 @@ class DriverRepo {
     AppConf mc = await _appConfService.readAppConf();
 
     //: init current driver from driverService
-    final cd = mc.drivers.firstWhereOrNull((e) => e.name == mc.currentDriver);
+    final cd = mc.drivers.where((e) => e.name == mc.currentDriver).firstOrNull;
     assert(cd != null,
         'current driver must not be null and must be in the drivers list');
     Driver currentDriver = cd!;
@@ -55,7 +54,7 @@ class DriverRepo {
       await dataDir.create(recursive: true);
     }
 
-    final dbPath = p.join(currentDriver.path, mainDbFileName);
+    final dbPath = p.join(dataDir.path, mainDbFileName);
 
     final currentDriverDB = await _dbService.initDB(dbPath);
 
