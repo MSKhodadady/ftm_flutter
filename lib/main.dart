@@ -3,7 +3,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:ftm_flutter/repos/app_conf.dart';
 import 'package:ftm_flutter/widget/tag_autocomplete/model.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:ftm_flutter/controllers/selected_files.dart';
+import 'package:ftm_flutter/models/selected_files_state.dart';
 import 'package:ftm_flutter/layouts/main_layout.dart';
 import 'package:ftm_flutter/views/add/model.dart';
 import 'package:ftm_flutter/views/add/view.dart';

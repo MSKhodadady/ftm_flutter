@@ -1,7 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:ftm_flutter/icon/zicon_outline_icons.dart';
-import 'package:ftm_flutter/controllers/selected_files.dart';
+import 'package:ftm_flutter/models/selected_files_state.dart';
 import 'package:ftm_flutter/util/io.dart';
 import 'package:provider/provider.dart';
 

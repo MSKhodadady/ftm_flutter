@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:ftm_flutter/controllers/selected_files.dart';
+import 'package:ftm_flutter/models/selected_files_state.dart';
 import 'package:ftm_flutter/models/driver.dart';
 import 'package:ftm_flutter/models/file_tag.dart';
 import 'package:ftm_flutter/repos/driver.dart';
